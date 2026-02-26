@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,74 @@ def _quantize_notes(notes: list[NoteEvent], tempo_bpm: float, subdivisions_per_b
             )
         )
     return quantized
+
+
+def _bar_seconds(tempo_bpm: float, beats_per_bar: int) -> float:
+    return (60.0 / max(1e-6, tempo_bpm)) * beats_per_bar
+
+
+def _infer_source_span_seconds(notes: list[NoteEvent], tempo_bpm: float, beats_per_bar: int) -> float:
+    if not notes:
+        return _bar_seconds(tempo_bpm, beats_per_bar)
+    max_end = max(note.end for note in notes)
+    bar_sec = _bar_seconds(tempo_bpm, beats_per_bar)
+    bars = max(1, int(math.ceil(max_end / bar_sec)))
+    return bars * bar_sec
+
+
+def _loop_melody_to_bars(
+    notes: list[NoteEvent],
+    tempo_bpm: float,
+    beats_per_bar: int,
+    target_bars: int,
+    loop_melody: bool = True,
+) -> list[NoteEvent]:
+    if not notes or target_bars <= 0:
+        return notes
+
+    bar_sec = _bar_seconds(tempo_bpm, beats_per_bar)
+    target_sec = target_bars * bar_sec
+    source_span = _infer_source_span_seconds(notes, tempo_bpm, beats_per_bar)
+    if source_span <= 0:
+        return notes
+
+    if not loop_melody:
+        clipped: list[NoteEvent] = []
+        for note in notes:
+            if note.start >= target_sec:
+                continue
+            clipped.append(
+                NoteEvent(
+                    pitch=note.pitch,
+                    start=note.start,
+                    end=min(note.end, target_sec),
+                    velocity=note.velocity,
+                    track=note.track,
+                )
+            )
+        return clipped
+
+    repeats = max(1, int(math.ceil(target_sec / source_span)))
+    looped: list[NoteEvent] = []
+    for idx in range(repeats):
+        shift = idx * source_span
+        for note in notes:
+            start = note.start + shift
+            end = note.end + shift
+            if start >= target_sec:
+                continue
+            if end <= 0:
+                continue
+            looped.append(
+                NoteEvent(
+                    pitch=note.pitch,
+                    start=start,
+                    end=min(end, target_sec),
+                    velocity=note.velocity,
+                    track=note.track,
+                )
+            )
+    return sorted(looped, key=lambda item: (item.start, item.pitch, item.end))
 
 
 def _lead_track(notes: list[NoteEvent], style: str) -> MidiTrack:
@@ -121,6 +190,135 @@ def _drum_track(chord_count: int, tempo_bpm: float, beats_per_bar: int, style: s
     return MidiTrack(name="Drums", channel=9, program=0, notes=tuple(notes))
 
 
+def _sub_bass_track(chords: tuple[Chord, ...], tempo_bpm: float, beats_per_bar: int) -> MidiTrack:
+    beat_seconds = 60.0 / max(1e-6, tempo_bpm)
+    notes: list[NoteEvent] = []
+    for bar_idx, chord in enumerate(chords):
+        start = bar_idx * beats_per_bar * beat_seconds
+        root = 24 + chord.root_pc  # C1
+        notes.append(
+            NoteEvent(
+                pitch=max(24, min(48, root)),
+                start=start,
+                end=start + beat_seconds * (beats_per_bar * 0.95),
+                velocity=78,
+                track="sub_bass",
+            )
+        )
+    return MidiTrack(name="Sub Bass", channel=6, program=39, notes=tuple(notes))
+
+
+def _arp_track(chords: tuple[Chord, ...], tempo_bpm: float, beats_per_bar: int, style: str) -> MidiTrack:
+    beat_seconds = 60.0 / max(1e-6, tempo_bpm)
+    step = beat_seconds * 0.5
+    notes: list[NoteEvent] = []
+    for bar_idx, chord in enumerate(chords):
+        bar_start = bar_idx * beats_per_bar * beat_seconds
+        tones = list(chord.tones)
+        if style == "jazz":
+            tones = tones + [((chord.root_pc + 14) % 12)]
+        for idx in range(beats_per_bar * 2):
+            tone = tones[idx % len(tones)]
+            start = bar_start + idx * step
+            pitch = 60 + tone + (12 if idx % 4 in (2, 3) else 0)
+            notes.append(
+                NoteEvent(
+                    pitch=max(52, min(88, pitch)),
+                    start=start,
+                    end=start + step * 0.8,
+                    velocity=64 if idx % 2 else 70,
+                    track="arp",
+                )
+            )
+    program = 0 if style != "modal" else 4
+    return MidiTrack(name="Arp Keys", channel=3, program=program, notes=tuple(notes))
+
+
+def _strings_track(chords: tuple[Chord, ...], tempo_bpm: float, beats_per_bar: int) -> MidiTrack:
+    beat_seconds = 60.0 / max(1e-6, tempo_bpm)
+    notes: list[NoteEvent] = []
+    for bar_idx, chord in enumerate(chords):
+        start = bar_idx * beats_per_bar * beat_seconds
+        end = start + beats_per_bar * beat_seconds
+        tones = chord.tones[:3]
+        base = 55
+        for idx, tone in enumerate(tones):
+            pitch = base + tone + (12 * (idx // 2))
+            notes.append(
+                NoteEvent(
+                    pitch=max(48, min(90, pitch)),
+                    start=start,
+                    end=end,
+                    velocity=60,
+                    track="strings",
+                )
+            )
+    return MidiTrack(name="Strings", channel=4, program=48, notes=tuple(notes))
+
+
+def _counter_melody_track(lead_notes: list[NoteEvent], tempo_bpm: float, beats_per_bar: int) -> MidiTrack:
+    if not lead_notes:
+        return MidiTrack(name="Counter Melody", channel=5, program=73, notes=tuple())
+    bar_sec = _bar_seconds(tempo_bpm, beats_per_bar)
+    notes: list[NoteEvent] = []
+    for note in lead_notes:
+        bar_idx = int(note.start / bar_sec)
+        if bar_idx % 4 in (2, 3):
+            pitch = note.pitch - 5 if note.pitch >= 67 else note.pitch + 7
+            notes.append(
+                NoteEvent(
+                    pitch=max(48, min(90, pitch)),
+                    start=note.start + 0.12,
+                    end=note.end + 0.08,
+                    velocity=max(40, min(100, note.velocity - 18)),
+                    track="counter",
+                )
+            )
+    return MidiTrack(name="Counter Melody", channel=5, program=73, notes=tuple(notes))
+
+
+def _rhythm_guitar_track(chords: tuple[Chord, ...], tempo_bpm: float, beats_per_bar: int) -> MidiTrack:
+    beat_seconds = 60.0 / max(1e-6, tempo_bpm)
+    notes: list[NoteEvent] = []
+    for bar_idx, chord in enumerate(chords):
+        bar_start = bar_idx * beats_per_bar * beat_seconds
+        tones = chord.tones[:3]
+        for beat in range(beats_per_bar):
+            if beat % 2 == 0:
+                continue
+            start = bar_start + beat * beat_seconds + beat_seconds * 0.05
+            for tone in tones:
+                notes.append(
+                    NoteEvent(
+                        pitch=max(50, min(86, 64 + tone)),
+                        start=start,
+                        end=start + beat_seconds * 0.45,
+                        velocity=62,
+                        track="guitar",
+                    )
+                )
+    return MidiTrack(name="Rhythm Guitar", channel=7, program=27, notes=tuple(notes))
+
+
+def _percussion_track(chord_count: int, tempo_bpm: float, beats_per_bar: int) -> MidiTrack:
+    beat_seconds = 60.0 / max(1e-6, tempo_bpm)
+    notes: list[NoteEvent] = []
+    for bar_idx in range(max(1, chord_count)):
+        bar_start = bar_idx * beats_per_bar * beat_seconds
+        for idx in range(beats_per_bar * 2):
+            start = bar_start + idx * beat_seconds * 0.5
+            notes.append(
+                NoteEvent(
+                    pitch=46 if idx % 2 else 42,
+                    start=start,
+                    end=start + 0.04,
+                    velocity=54 if idx % 2 else 60,
+                    track="perc",
+                )
+            )
+    return MidiTrack(name="Percussion", channel=9, program=0, notes=tuple(notes))
+
+
 def _resolve_selected_chords(report: dict[str, Any]) -> tuple[Chord, ...]:
     selected = report["harmony"]["selected_candidate"]
     tonic_name = report["key_estimate"]["tonic"]
@@ -172,21 +370,49 @@ def create_logic_project_bundle(
     output_dir: str | Path,
     project_name: str,
     quantize_subdivisions: int = 4,
+    complexity: str = "basic",
+    arrangement_bars: int | None = None,
+    loop_melody: bool = True,
 ) -> dict[str, str]:
     style = report["harmony"]["style"]
-    chords = _resolve_selected_chords(report)
+    if complexity not in {"basic", "rich"}:
+        raise ValueError("complexity must be one of: basic, rich")
+
+    base_chords = _resolve_selected_chords(report)
+    target_bars = arrangement_bars if arrangement_bars is not None else len(base_chords)
+    target_bars = max(1, target_bars)
+    chords = tuple(base_chords[idx % len(base_chords)] for idx in range(target_bars))
+
     notes = _quantize_notes(data.sorted_notes(), tempo_bpm=data.tempo_bpm, subdivisions_per_beat=quantize_subdivisions)
+    notes = _loop_melody_to_bars(
+        notes,
+        tempo_bpm=data.tempo_bpm,
+        beats_per_bar=data.beats_per_bar,
+        target_bars=target_bars,
+        loop_melody=loop_melody,
+    )
 
     bundle_dir = Path(output_dir) / _slugify(project_name)
     bundle_dir.mkdir(parents=True, exist_ok=True)
 
     midi_path = bundle_dir / "logic_arrangement.mid"
-    tracks = [
+    tracks: list[MidiTrack] = [
         _lead_track(notes, style=style),
         _bass_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar, style=style),
         _pad_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar, style=style),
         _drum_track(len(chords), tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar, style=style),
     ]
+    if complexity == "rich":
+        tracks.extend(
+            [
+                _sub_bass_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar),
+                _arp_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar, style=style),
+                _strings_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar),
+                _counter_melody_track(notes, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar),
+                _rhythm_guitar_track(chords, tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar),
+                _percussion_track(len(chords), tempo_bpm=data.tempo_bpm, beats_per_bar=data.beats_per_bar),
+            ]
+        )
     write_multi_track_midi(midi_path, tracks, tempo_bpm=data.tempo_bpm)
 
     report_json_path = bundle_dir / "analysis_report.json"
@@ -199,13 +425,24 @@ def create_logic_project_bundle(
         "project_name": project_name,
         "tempo_bpm": report["input"]["tempo_bpm"],
         "meter": f"{report['input']['beats_per_bar']}/{report['input']['beat_unit']}",
-        "tracks": [
-            {"name": "Lead Melody", "logic_instrument_hint": "Lead > Synth Lead"},
-            {"name": "Bass", "logic_instrument_hint": "Bass > Fingerstyle Bass"},
-            {"name": "Harmony", "logic_instrument_hint": "Keys > Studio Piano / Electric Piano"},
-            {"name": "Drums", "logic_instrument_hint": "Drum Kit > Producer Kit"},
-        ],
+        "arrangement_bars": target_bars,
+        "complexity": complexity,
+        "tracks": [],
     }
+    hints = {
+        "Lead Melody": "Lead > Synth Lead",
+        "Bass": "Bass > Fingerstyle Bass",
+        "Harmony": "Keys > Studio Piano / Electric Piano",
+        "Drums": "Drum Kit > Producer Kit",
+        "Sub Bass": "Bass > Synth Bass",
+        "Arp Keys": "Keys > Bright Piano / EP",
+        "Strings": "Orchestral > Studio Strings",
+        "Counter Melody": "Lead > Flute / Solo Synth",
+        "Rhythm Guitar": "Guitar > Clean Electric",
+        "Percussion": "Drum Kit > Percussion",
+    }
+    for track in tracks:
+        track_map["tracks"].append({"name": track.name, "logic_instrument_hint": hints.get(track.name, "Custom")})
     track_map_path.write_text(json.dumps(track_map, ensure_ascii=False, indent=2), encoding="utf-8")
 
     _write_mac_scripts(bundle_dir, midi_path, project_name)

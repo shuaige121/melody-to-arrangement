@@ -67,6 +67,10 @@ class PipelineAndCliTests(unittest.TestCase):
                 "pop",
                 "--bars",
                 "8",
+                "--complexity",
+                "rich",
+                "--arrangement-bars",
+                "24",
                 "--project-name",
                 "CLI Logic Song",
                 "--output-dir",
@@ -80,6 +84,9 @@ class PipelineAndCliTests(unittest.TestCase):
             self.assertTrue((bundle_dir / "logic_arrangement.mid").exists())
             self.assertTrue((bundle_dir / "analysis_report.json").exists())
             self.assertTrue((bundle_dir / "open_in_logic.command").exists())
+            track_map = json.loads((bundle_dir / "logic_track_map.json").read_text(encoding="utf-8"))
+            self.assertEqual(track_map["complexity"], "rich")
+            self.assertEqual(track_map["arrangement_bars"], 24)
 
 
 if __name__ == "__main__":

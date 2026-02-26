@@ -31,6 +31,8 @@ Generate Logic kit directly:
 ```bash
 python3 -m melody_architect logic-kit examples/c_major_hook.csv \
   --style pop \
+  --complexity rich \
+  --arrangement-bars 32 \
   --project-name "Demo Song" \
   --output-dir ./logic_export
 ```
@@ -50,6 +52,8 @@ python3 -m melody_architect analyze INPUT --style pop --out-json report.json --o
 ```bash
 python3 -m melody_architect logic-kit INPUT.wav \
   --style pop \
+  --complexity rich \
+  --arrangement-bars 32 \
   --project-name "My Song" \
   --output-dir ./logic_export
 ```
@@ -62,6 +66,11 @@ Output bundle includes:
 - `logic_track_map.json`
 - `open_in_logic.command` (macOS)
 - `create_logic_project.applescript` (macOS)
+
+For denser productions:
+- use `--complexity rich` for extra instruments (sub bass, arp, strings, counter melody, rhythm guitar, percussion)
+- use `--arrangement-bars 32` or `64` for longer form
+- default behavior loops melody motif to fill target length (disable via `--no-loop-melody`)
 
 ## Can It Create `.logicx` Automatically?
 

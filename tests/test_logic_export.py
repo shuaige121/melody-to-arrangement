@@ -27,6 +27,8 @@ class LogicExportTests(unittest.TestCase):
                 report=report,
                 output_dir=tmpdir,
                 project_name="Unit Test Song",
+                complexity="rich",
+                arrangement_bars=16,
             )
             bundle_dir = Path(bundle["bundle_dir"])
 
@@ -45,10 +47,18 @@ class LogicExportTests(unittest.TestCase):
             self.assertTrue(any(name and "Lead Melody" in name for name in track_names))
             self.assertTrue(any(name and "Bass" in name for name in track_names))
             self.assertTrue(any(name and "Harmony" in name for name in track_names))
+            self.assertTrue(any(name and "Arp Keys" in name for name in track_names))
+            self.assertTrue(any(name and "Strings" in name for name in track_names))
 
             launcher = (bundle_dir / "open_in_logic.command").read_text(encoding="utf-8")
             expected_logicx = str((bundle_dir / "unit-test-song.logicx").resolve())
             self.assertIn(expected_logicx, launcher)
+
+            payload = json.loads((bundle_dir / "analysis_report.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["input"]["bar_count"], 8)
+            track_map = json.loads((bundle_dir / "logic_track_map.json").read_text(encoding="utf-8"))
+            self.assertEqual(track_map["arrangement_bars"], 16)
+            self.assertEqual(track_map["complexity"], "rich")
 
     def test_midi_writer_supports_utf8_track_name(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

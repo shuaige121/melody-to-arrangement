@@ -43,6 +43,9 @@ def build_parser() -> argparse.ArgumentParser:
     logic_kit.add_argument("--mode", default=None, choices=["major", "minor", "dorian", "mixolydian"], help="Mode override")
     logic_kit.add_argument("--project-name", default="Melody Logic Project", help="Project display name")
     logic_kit.add_argument("--output-dir", default="logic_export", help="Output directory for Logic kit")
+    logic_kit.add_argument("--complexity", default="rich", choices=["basic", "rich"], help="Arrangement complexity")
+    logic_kit.add_argument("--arrangement-bars", type=int, default=None, help="Final arrangement length in bars")
+    logic_kit.add_argument("--no-loop-melody", action="store_true", help="Do not loop melody to fill arrangement bars")
     logic_kit.add_argument("--top-k", type=int, default=3, help="Number of harmony candidates kept in report")
     logic_kit.add_argument("--disable-borrowed-iv", action="store_true", help="Disable pop borrowed iv candidate")
     logic_kit.add_argument("--disable-tritone-sub", action="store_true", help="Disable jazz tritone-sub candidate")
@@ -103,6 +106,9 @@ def main(argv: list[str] | None = None) -> int:
             output_dir=args.output_dir,
             project_name=args.project_name,
             quantize_subdivisions=max(1, args.quantize_subdiv),
+            complexity=args.complexity,
+            arrangement_bars=args.arrangement_bars,
+            loop_melody=not args.no_loop_melody,
         )
 
         print(f"[ok] Logic kit created: {bundle['bundle_dir']}")

@@ -18,8 +18,11 @@ class LogicBuilderApp:
         self.output_var = tk.StringVar(value=str(Path.cwd() / "logic_export"))
         self.project_var = tk.StringVar(value="Melody Logic Project")
         self.style_var = tk.StringVar(value="pop")
+        self.complexity_var = tk.StringVar(value="rich")
         self.bars_var = tk.StringVar(value="")
+        self.arr_bars_var = tk.StringVar(value="32")
         self.tempo_var = tk.StringVar(value="")
+        self.loop_var = tk.BooleanVar(value=True)
         self.status_var = tk.StringVar(value="Ready")
 
         self._build_ui()
@@ -45,10 +48,17 @@ class LogicBuilderApp:
         ttk.Combobox(options, textvariable=self.style_var, values=["pop", "modal", "jazz"], width=12).grid(
             row=0, column=1, padx=(8, 20)
         )
-        ttk.Label(options, text="Bars (optional)").grid(row=0, column=2, sticky=tk.W)
-        ttk.Entry(options, textvariable=self.bars_var, width=8).grid(row=0, column=3, padx=(8, 20))
-        ttk.Label(options, text="Tempo (optional)").grid(row=0, column=4, sticky=tk.W)
-        ttk.Entry(options, textvariable=self.tempo_var, width=8).grid(row=0, column=5, padx=8)
+        ttk.Label(options, text="Complexity").grid(row=0, column=2, sticky=tk.W)
+        ttk.Combobox(options, textvariable=self.complexity_var, values=["basic", "rich"], width=10).grid(
+            row=0, column=3, padx=(8, 20)
+        )
+        ttk.Label(options, text="Analyze Bars").grid(row=0, column=4, sticky=tk.W)
+        ttk.Entry(options, textvariable=self.bars_var, width=6).grid(row=0, column=5, padx=(8, 20))
+        ttk.Label(options, text="Arrange Bars").grid(row=0, column=6, sticky=tk.W)
+        ttk.Entry(options, textvariable=self.arr_bars_var, width=6).grid(row=0, column=7, padx=(8, 20))
+        ttk.Label(options, text="Tempo (optional)").grid(row=0, column=8, sticky=tk.W)
+        ttk.Entry(options, textvariable=self.tempo_var, width=8).grid(row=0, column=9, padx=8)
+        ttk.Checkbutton(options, text="Loop Melody", variable=self.loop_var).grid(row=1, column=0, columnspan=3, pady=(8, 0), sticky=tk.W)
 
         ttk.Button(frame, text="Generate Logic Kit", command=self._run).grid(row=7, column=0, sticky=tk.W, pady=(22, 0))
         ttk.Label(frame, textvariable=self.status_var).grid(row=8, column=0, sticky=tk.W, pady=(16, 0))
@@ -89,6 +99,7 @@ class LogicBuilderApp:
             return
 
         bars = None
+        arrangement_bars = None
         tempo = None
         if self.bars_var.get().strip():
             try:
@@ -102,6 +113,12 @@ class LogicBuilderApp:
             except ValueError:
                 messagebox.showerror("Invalid tempo", "Tempo must be a number.")
                 return
+        if self.arr_bars_var.get().strip():
+            try:
+                arrangement_bars = int(self.arr_bars_var.get().strip())
+            except ValueError:
+                messagebox.showerror("Invalid arrange bars", "Arrange bars must be an integer.")
+                return
 
         try:
             self.status_var.set("Analyzing melody...")
@@ -114,6 +131,9 @@ class LogicBuilderApp:
                 output_dir=output_dir,
                 project_name=project_name,
                 quantize_subdivisions=4,
+                complexity=self.complexity_var.get().strip() or "rich",
+                arrangement_bars=arrangement_bars,
+                loop_melody=bool(self.loop_var.get()),
             )
         except Exception as exc:  # noqa: BLE001
             self.status_var.set("Failed")
