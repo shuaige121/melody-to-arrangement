@@ -1,190 +1,375 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 
-// ---------------------------------------------------------------------------
-// Supported locales
-// ---------------------------------------------------------------------------
-
-export type Locale = 'zh' | 'en';
+export type Locale = 'zh' | 'en' | 'ja' | 'ms' | 'ta';
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   zh: '中文',
   en: 'EN',
+  ja: '日本語',
+  ms: 'BM',
+  ta: 'தமிழ்',
 };
 
-// ---------------------------------------------------------------------------
-// Translation keys
-// ---------------------------------------------------------------------------
+const translations: Record<Locale, Record<string, string>> = {
+  en: {
+    step_upload: 'Upload',
+    step_analyze: 'Analyze',
+    step_arrange: 'Arrange',
+    step_edit: 'Edit',
+    step_export: 'Export',
 
-const translations: Record<string, Record<Locale, string>> = {
-  // ===== Welcome Screen =====
-  'welcome.title': { zh: 'Music Arranger', en: 'Music Arranger' },
-  'welcome.subtitle': {
-    zh: '提供你的主旋律，我们将自动生成包含贝斯、和声、鼓组等多轨编曲，支持 128 种 GM 标准乐器。',
-    en: 'Provide your main melody and we\'ll generate a full multi-track arrangement with bass, harmony, drums, and 128 GM instruments.',
-  },
-  'welcome.question': {
-    zh: '你想如何提供主旋律？',
-    en: 'How would you like to provide your melody?',
-  },
-  'welcome.or': { zh: '或者', en: 'or' },
-  'welcome.drawManual': { zh: '手动绘制', en: 'Draw Manually' },
-  'welcome.drawManualDesc': {
-    zh: '在钢琴卷帘中逐个音符绘制旋律',
-    en: 'Use the piano roll to draw your melody note by note',
-  },
-  'welcome.loadDemo': { zh: '加载示例', en: 'Load Demo' },
-  'welcome.loadDemoDesc': {
-    zh: '使用 C 大调音阶示例旋律快速体验',
-    en: 'Start with a C major scale demo melody',
-  },
+    upload_title: 'Upload Your Music',
+    upload_subtitle: 'Drag and drop your audio or MIDI file',
+    upload_formats: 'Supports: MIDI, MP3, WAV, MusicXML, CSV',
+    upload_or: 'or',
+    upload_browse: 'Browse Files',
+    upload_demo: 'Load Demo',
+    upload_draw: 'Draw Manually',
 
-  // ===== File Upload =====
-  'upload.analyzing': { zh: '正在分析你的文件...', en: 'Analyzing your file...' },
-  'upload.dragDrop': { zh: '将音乐文件拖放到此处', en: 'Drag & drop your music file here' },
-  'upload.dropHere': { zh: '松开鼠标放置文件', en: 'Drop your file here' },
-  'upload.clickBrowse': { zh: '或点击选择文件', en: 'or click to browse' },
-  'upload.formats': {
-    zh: '支持格式：MIDI (.mid) / 音频 (.wav, .mp3, .flac, .ogg, .aac) / MusicXML (.xml, .musicxml) / CSV',
-    en: 'Supported: MIDI (.mid) / Audio (.wav, .mp3, .flac, .ogg, .aac) / MusicXML (.xml, .musicxml) / CSV',
-  },
-  'upload.noNotes': {
-    zh: '未在文件中检测到音符，请尝试其他文件或手动绘制。',
-    en: 'No notes detected in this file. Try a different file or draw manually.',
-  },
+    analyze_title: 'Analysis Results',
+    analyze_key: 'Detected Key',
+    analyze_bpm: 'BPM',
+    analyze_time_sig: 'Time Signature',
+    analyze_bars: 'Bars',
+    analyze_notes: 'Notes',
+    analyze_phrases: 'Phrases',
+    analyze_correct: 'Correct manually if needed',
 
-  // ===== Sidebar =====
-  'sidebar.melodyInput': { zh: '旋律输入', en: 'Melody Input' },
-  'sidebar.melody': { zh: '旋律', en: 'Melody' },
-  'sidebar.demo': { zh: '示例', en: 'Demo' },
-  'sidebar.uploadFile': { zh: '上传文件', en: 'Upload File' },
-  'sidebar.instruments': { zh: '乐器选择 (128 GM)', en: 'Instruments (128 GM)' },
-  'sidebar.leadMelody': { zh: '主旋律', en: 'Lead Melody' },
-  'sidebar.bass': { zh: '贝斯', en: 'Bass' },
-  'sidebar.harmonyArp': { zh: '和声 / 琶音', en: 'Harmony / Arp' },
+    arrange_title: 'Generate Arrangement',
+    arrange_style: 'Style',
+    arrange_creativity: 'Creativity Level',
+    arrange_conservative: 'Conservative',
+    arrange_balanced: 'Balanced',
+    arrange_creative: 'Creative',
+    arrange_generate: 'Generate',
+    arrange_generating: 'Generating arrangement...',
 
-  // ===== Track List =====
-  'trackList.title': { zh: '轨道', en: 'Tracks' },
-  'trackList.empty': { zh: '生成编曲后显示轨道', en: 'Generate arrangement to see tracks' },
+    edit_title: 'Edit Arrangement',
+    edit_mute: 'Mute',
+    edit_solo: 'Solo',
+    edit_volume: 'Volume',
 
-  // ===== Piano Roll Panel =====
-  'pianoRoll.title': { zh: '钢琴卷帘', en: 'Piano Roll' },
-  'pianoRoll.collapse': { zh: '收起', en: 'Collapse' },
-  'pianoRoll.expand': { zh: '展开', en: 'Expand' },
+    export_title: 'Export',
+    export_midi: 'Export MIDI',
+    export_mp3: 'Export MP3',
+    export_logic: 'Export Logic Pro Kit',
 
-  // ===== AI Generation =====
-  'ai.generating': { zh: 'AI 编曲中...', en: 'AI Arranging...' },
-  'ai.success': { zh: 'AI 编曲完成', en: 'AI arrangement complete' },
-  'ai.fallback': { zh: '已使用本地引擎生成', en: 'Generated with local engine' },
+    proc_humanizer: 'Humanizer',
+    proc_timing: 'Timing Variation',
+    proc_velocity: 'Velocity Variation',
+    proc_swing: 'Swing',
 
-  // ===== Transport =====
-  'transport.rewind': { zh: '回到开头', en: 'Rewind' },
-  'transport.play': { zh: '播放', en: 'Play' },
-  'transport.pause': { zh: '暂停', en: 'Pause' },
-  'transport.stop': { zh: '停止', en: 'Stop' },
-  'transport.tempo': { zh: '速度', en: 'Tempo' },
-  'transport.bars': { zh: '小节', en: 'Bars' },
-  'transport.style': { zh: '风格', en: 'Style' },
-  'transport.complexity': { zh: '丰富度', en: 'Complexity' },
-  'transport.stylePop': { zh: '流行', en: 'Pop' },
-  'transport.styleModal': { zh: '调式', en: 'Modal' },
-  'transport.styleJazz': { zh: '爵士', en: 'Jazz' },
-  'transport.complexityBasic': { zh: '基础', en: 'Basic' },
-  'transport.complexityRich': { zh: '丰富', en: 'Rich' },
+    nav_back: 'Back',
+    nav_next: 'Next',
+    nav_back_to_site: '← zhouruby.com',
 
-  // ===== Export Panel =====
-  'export.keyEmpty': { zh: '调性: --', en: 'Key: --' },
-  'export.chordsEmpty': { zh: '和弦: --', en: 'Chords: --' },
-  'export.generate': { zh: '生成编曲', en: 'Generate Arrangement' },
-  'export.generating': { zh: '生成中...', en: 'Generating...' },
-  'export.downloadMidi': { zh: '下载 MIDI', en: 'Download MIDI' },
-  'export.downloadJson': { zh: '下载 JSON', en: 'Download JSON' },
+    loading: 'Loading...',
+    error: 'Error',
+    success: 'Success',
 
-  // ===== Arrangement View =====
-  'arrangement.header': { zh: '编曲', en: 'Arrangement' },
-  'arrangement.tracks': { zh: '轨道', en: 'Tracks' },
-  'arrangement.barsLabel': { zh: '小节', en: 'Bars' },
-  'arrangement.emptyTitle': {
-    zh: '点击上方 "生成编曲" 按钮',
-    en: 'Click "Generate Arrangement" above',
-  },
-  'arrangement.emptyDesc': {
-    zh: '左侧钢琴卷帘中已有旋律。点击"生成编曲"将自动生成贝斯、和声、鼓组等多轨编曲。你也可以在钢琴卷帘中绘制自己的旋律。',
-    en: 'A demo melody is already loaded in the piano roll on the left. Click Generate to create a multi-track arrangement with bass, harmony, drums, and more.',
-  },
+    // Legacy / shared keys used by existing components
+    'upload.analyzing': 'Analyzing your file...',
+    'upload.dragDrop': 'Drag & drop your music file here',
+    'upload.dropHere': 'Drop your file here',
+    'upload.clickBrowse': 'or click to browse',
+    'upload.formats': 'Supported: MIDI (.mid) / Audio (.wav, .mp3, .flac, .ogg, .aac) / MusicXML (.xml, .musicxml) / CSV',
+    'upload.noNotes': 'No notes detected in this file. Try a different file or draw manually.',
 
-  // ===== Main Panel =====
-  'main.generateBtn': { zh: '生成编曲', en: 'Generate Arrangement' },
-  'main.notesLoaded': { zh: '个音符已加载。点击生成贝斯、和声、鼓组等多轨编曲。', en: ' notes loaded. Click to generate bass, harmony, drums and more.' },
-  'main.listenHint': {
-    zh: '按空格键或点击播放按钮试听。使用右上角按钮下载 MIDI 或 JSON。',
-    en: 'Press Space or click Play to listen. Use top-right buttons to download MIDI or JSON.',
-  },
+    'transport.rewind': 'Rewind',
+    'transport.play': 'Play',
+    'transport.pause': 'Pause',
+    'transport.stop': 'Stop',
+    'transport.bars': 'Bars',
+    'transport.style': 'Style',
+    'transport.complexity': 'Complexity',
+    'transport.stylePop': 'Pop',
+    'transport.styleModal': 'Modal',
+    'transport.styleJazz': 'Jazz',
+    'transport.complexityBasic': 'Basic',
+    'transport.complexityRich': 'Rich',
 
-  // ===== Errors =====
-  'error.noNotes': {
-    zh: '没有音符可以编曲。请先在钢琴卷帘中绘制音符。',
-    en: 'No notes to arrange. Draw some notes in the piano roll first.',
-  },
-  'error.noHarmony': {
-    zh: '未找到适合此旋律和风格的和声方案。',
-    en: 'No harmony candidates found for this melody and style.',
-  },
-  'error.generateFirst': {
-    zh: '请先生成编曲。',
-    en: 'Generate an arrangement first.',
-  },
-  'error.playbackFailed': { zh: '播放失败', en: 'Playback failed' },
-  'error.stopFailed': { zh: '停止失败', en: 'Stop failed' },
-  'error.midiExport': { zh: 'MIDI 导出失败', en: 'MIDI export failed' },
-  'error.jsonExport': { zh: 'JSON 导出失败', en: 'JSON export failed' },
+    'trackList.title': 'Tracks',
+    'trackList.empty': 'Generate arrangement to see tracks',
 
-  // ===== User Guide =====
-  'guide.title': { zh: '使用指南', en: 'User Guide' },
-  'guide.close': { zh: '关闭', en: 'Close' },
-  'guide.step1Title': { zh: '1. 提供主旋律', en: '1. Provide Your Melody' },
-  'guide.step1Desc': {
-    zh: '你可以通过三种方式提供主旋律：\n• 上传文件 — 支持 MIDI、WAV、MP3、FLAC、OGG、MusicXML、CSV 等格式\n• 手动绘制 — 在钢琴卷帘中点击格子绘制音符，拖拽可以画长音\n• 加载示例 — 一键加载 C 大调音阶体验完整流程',
-    en: 'You can provide your melody in three ways:\n• Upload a file — supports MIDI, WAV, MP3, FLAC, OGG, MusicXML, CSV\n• Draw manually — click cells in the piano roll to place notes, drag for longer notes\n• Load demo — quickly load a C major scale to try the full workflow',
-  },
-  'guide.step2Title': { zh: '2. 配置参数', en: '2. Configure Parameters' },
-  'guide.step2Desc': {
-    zh: '在底部控制栏调整：\n• 速度 (Tempo) — 40-240 BPM\n• 小节数 (Bars) — 2-32 小节\n• 风格 — 流行 / 调式 / 爵士\n• 丰富度 — 基础（4轨）/ 丰富（5轨，含琶音）\n\n展开左侧"乐器选择"面板，可以从 128 种 GM 标准乐器中选择主旋律、贝斯、和声的音色。',
-    en: 'Adjust in the bottom transport bar:\n• Tempo — 40-240 BPM\n• Bars — 2-32 bars\n• Style — Pop / Modal / Jazz\n• Complexity — Basic (4 tracks) / Rich (5 tracks with arpeggio)\n\nExpand the "Instruments" panel on the left to choose from 128 GM instruments for lead, bass, and harmony.',
-  },
-  'guide.step3Title': { zh: '3. 生成编曲', en: '3. Generate Arrangement' },
-  'guide.step3Desc': {
-    zh: '点击"生成编曲"按钮，系统将自动：\n• 检测旋律的调性（使用 Krumhansl-Schmuckler 算法）\n• 匹配最佳和弦进行\n• 生成贝斯线、和声垫、鼓组节奏等多个轨道\n\n右侧面板将显示所有轨道的音符可视化。',
-    en: 'Click "Generate Arrangement" and the system will automatically:\n• Detect the key (using Krumhansl-Schmuckler algorithm)\n• Match the best chord progression\n• Generate bass line, harmony pad, drum pattern, and more\n\nThe right panel will show a visualization of all tracks.',
-  },
-  'guide.step4Title': { zh: '4. 试听与导出', en: '4. Listen & Export' },
-  'guide.step4Desc': {
-    zh: '• 按空格键或点击 ▶ 播放编曲\n• 点击 ⏸ 暂停，⏹ 停止\n• 下载 MIDI — 可导入任何 DAW（Logic Pro、Ableton、FL Studio 等）\n• 下载 JSON — 包含完整编曲数据，便于二次开发',
-    en: '• Press Space or click ▶ to play the arrangement\n• Click ⏸ to pause, ⏹ to stop\n• Download MIDI — import into any DAW (Logic Pro, Ableton, FL Studio, etc.)\n• Download JSON — full arrangement data for further development',
-  },
-  'guide.supportedFormats': { zh: '支持的文件格式', en: 'Supported File Formats' },
-  'guide.formatsDesc': {
-    zh: '• MIDI (.mid, .midi) — 直接在浏览器解析，速度最快\n• 音频 (.wav, .aif, .aiff) — 原生音频分析\n• 压缩音频 (.mp3, .flac, .ogg, .aac, .m4a, .wma, .opus) — 需要后端服务\n• 乐谱 (.xml, .musicxml, .mxl) — MusicXML 标准格式\n• 数据 (.csv) — pitch, start, end, velocity 列格式',
-    en: '• MIDI (.mid, .midi) — parsed in browser, fastest\n• Audio (.wav, .aif, .aiff) — native audio analysis\n• Compressed audio (.mp3, .flac, .ogg, .aac, .m4a, .wma, .opus) — requires backend\n• Sheet music (.xml, .musicxml, .mxl) — MusicXML standard\n• Data (.csv) — pitch, start, end, velocity columns',
-  },
-  'guide.help': { zh: '帮助', en: 'Help' },
+    'arrangement.emptyTitle': 'Click Generate to create arrangement',
+    'arrangement.emptyDesc': 'Upload or draw a melody, then generate tracks for bass, harmony, and drums.',
 
-  // ===== Demo source name =====
-  'demo.name': { zh: '示例: C 大调音阶', en: 'Demo: C Major Scale' },
+    'sidebar.instruments': 'Instruments (128 GM)',
+    'sidebar.leadMelody': 'Lead Melody',
+    'sidebar.bass': 'Bass',
+    'sidebar.harmonyArp': 'Harmony / Arp',
+    'sidebar.melodyInput': 'Melody Input',
+    'sidebar.melody': 'Melody',
+    'sidebar.demo': 'Demo',
+    'sidebar.uploadFile': 'Upload File',
+
+    'pianoRoll.title': 'Piano Roll',
+
+    'error.noNotes': 'No notes to arrange. Draw some notes in the piano roll first.',
+    'error.generateFirst': 'Generate an arrangement first.',
+    'error.playbackFailed': 'Playback failed',
+    'error.stopFailed': 'Stop failed',
+    'error.midiExport': 'MIDI export failed',
+    'error.jsonExport': 'JSON export failed',
+
+    'demo.name': 'Demo: C Major Scale',
+  },
+  zh: {
+    step_upload: '上传',
+    step_analyze: '分析',
+    step_arrange: '编曲',
+    step_edit: '编辑',
+    step_export: '导出',
+
+    upload_title: '上传你的音乐',
+    upload_subtitle: '拖放音频或 MIDI 文件',
+    upload_formats: '支持: MIDI, MP3, WAV, MusicXML, CSV',
+    upload_or: '或',
+    upload_browse: '选择文件',
+    upload_demo: '加载演示',
+    upload_draw: '手动绘制',
+
+    analyze_title: '分析结果',
+    analyze_key: '检测到的调',
+    analyze_bpm: '速度',
+    analyze_time_sig: '拍号',
+    analyze_bars: '小节',
+    analyze_notes: '音符',
+    analyze_phrases: '乐句',
+    analyze_correct: '如有需要可手动修正',
+
+    arrange_title: '生成编曲',
+    arrange_style: '风格',
+    arrange_creativity: '创意档位',
+    arrange_conservative: '保守',
+    arrange_balanced: '平衡',
+    arrange_creative: '创意',
+    arrange_generate: '生成',
+    arrange_generating: '正在生成编曲...',
+
+    edit_title: '编辑编曲',
+    edit_mute: '静音',
+    edit_solo: '独奏',
+    edit_volume: '音量',
+
+    export_title: '导出',
+    export_midi: '导出 MIDI',
+    export_mp3: '导出 MP3',
+    export_logic: '导出 Logic Pro 套件',
+
+    proc_humanizer: '人性化',
+    proc_timing: '时值变化',
+    proc_velocity: '力度变化',
+    proc_swing: '摇摆感',
+
+    nav_back: '返回',
+    nav_next: '下一步',
+    nav_back_to_site: '← zhouruby.com',
+
+    loading: '加载中...',
+    error: '错误',
+    success: '成功',
+
+    'upload.analyzing': '正在分析你的文件...',
+    'upload.dragDrop': '将音乐文件拖放到此处',
+    'upload.dropHere': '松开鼠标放置文件',
+    'upload.clickBrowse': '或点击选择文件',
+    'upload.formats': '支持格式：MIDI (.mid) / 音频 (.wav, .mp3, .flac, .ogg, .aac) / MusicXML (.xml, .musicxml) / CSV',
+    'upload.noNotes': '未在文件中检测到音符，请尝试其他文件或手动绘制。',
+
+    'transport.rewind': '回到开头',
+    'transport.play': '播放',
+    'transport.pause': '暂停',
+    'transport.stop': '停止',
+    'transport.bars': '小节',
+    'transport.style': '风格',
+    'transport.complexity': '丰富度',
+    'transport.stylePop': '流行',
+    'transport.styleModal': '调式',
+    'transport.styleJazz': '爵士',
+    'transport.complexityBasic': '基础',
+    'transport.complexityRich': '丰富',
+
+    'trackList.title': '轨道',
+    'trackList.empty': '生成编曲后显示轨道',
+
+    'arrangement.emptyTitle': '点击生成开始编曲',
+    'arrangement.emptyDesc': '上传或绘制旋律后，系统会生成贝斯、和声和鼓组轨道。',
+
+    'sidebar.instruments': '乐器选择 (128 GM)',
+    'sidebar.leadMelody': '主旋律',
+    'sidebar.bass': '贝斯',
+    'sidebar.harmonyArp': '和声 / 琶音',
+    'sidebar.melodyInput': '旋律输入',
+    'sidebar.melody': '旋律',
+    'sidebar.demo': '示例',
+    'sidebar.uploadFile': '上传文件',
+
+    'pianoRoll.title': '钢琴卷帘',
+
+    'error.noNotes': '没有音符可以编曲。请先在钢琴卷帘中绘制音符。',
+    'error.generateFirst': '请先生成编曲。',
+    'error.playbackFailed': '播放失败',
+    'error.stopFailed': '停止失败',
+    'error.midiExport': 'MIDI 导出失败',
+    'error.jsonExport': 'JSON 导出失败',
+
+    'demo.name': '示例: C 大调音阶',
+  },
+  ja: {
+    step_upload: 'アップロード',
+    step_analyze: '分析',
+    step_arrange: 'アレンジ',
+    step_edit: '編集',
+    step_export: 'エクスポート',
+    upload_title: '音楽をアップロード',
+    upload_subtitle: 'オーディオまたはMIDIファイルをドラッグ＆ドロップ',
+    upload_formats: '対応: MIDI, MP3, WAV, MusicXML, CSV',
+    upload_or: 'または',
+    upload_browse: 'ファイルを選択',
+    upload_demo: 'デモを読み込む',
+    upload_draw: '手動で描画',
+    analyze_title: '分析結果',
+    analyze_key: '検出されたキー',
+    analyze_bpm: 'BPM',
+    analyze_time_sig: '拍子',
+    analyze_bars: '小節',
+    analyze_notes: '音符',
+    analyze_phrases: 'フレーズ',
+    analyze_correct: '必要に応じて手動で修正',
+    arrange_title: 'アレンジを生成',
+    arrange_style: 'スタイル',
+    arrange_creativity: 'クリエイティブレベル',
+    arrange_conservative: '控えめ',
+    arrange_balanced: 'バランス',
+    arrange_creative: 'クリエイティブ',
+    arrange_generate: '生成',
+    arrange_generating: 'アレンジ生成中...',
+    edit_title: 'アレンジを編集',
+    edit_mute: 'ミュート',
+    edit_solo: 'ソロ',
+    edit_volume: '音量',
+    export_title: 'エクスポート',
+    export_midi: 'MIDIエクスポート',
+    export_mp3: 'MP3エクスポート',
+    export_logic: 'Logic Proキットエクスポート',
+    proc_humanizer: 'ヒューマナイザー',
+    proc_timing: 'タイミング変化',
+    proc_velocity: 'ベロシティ変化',
+    proc_swing: 'スウィング',
+    nav_back: '戻る',
+    nav_next: '次へ',
+    nav_back_to_site: '← zhouruby.com',
+    loading: '読み込み中...',
+    error: 'エラー',
+    success: '成功',
+  },
+  ms: {
+    step_upload: 'Muat Naik',
+    step_analyze: 'Analisis',
+    step_arrange: 'Aransemen',
+    step_edit: 'Sunting',
+    step_export: 'Eksport',
+    upload_title: 'Muat Naik Muzik Anda',
+    upload_subtitle: 'Seret dan lepaskan fail audio atau MIDI',
+    upload_formats: 'Sokongan: MIDI, MP3, WAV, MusicXML, CSV',
+    upload_or: 'atau',
+    upload_browse: 'Pilih Fail',
+    upload_demo: 'Muat Demo',
+    upload_draw: 'Lukis Manual',
+    analyze_title: 'Keputusan Analisis',
+    analyze_key: 'Kunci Dikesan',
+    analyze_bpm: 'BPM',
+    analyze_time_sig: 'Tanda Masa',
+    analyze_bars: 'Bar',
+    analyze_notes: 'Nota',
+    analyze_phrases: 'Frasa',
+    analyze_correct: 'Betulkan secara manual jika perlu',
+    arrange_title: 'Jana Aransemen',
+    arrange_style: 'Gaya',
+    arrange_creativity: 'Tahap Kreativiti',
+    arrange_conservative: 'Konservatif',
+    arrange_balanced: 'Seimbang',
+    arrange_creative: 'Kreatif',
+    arrange_generate: 'Jana',
+    arrange_generating: 'Menjana aransemen...',
+    edit_title: 'Sunting Aransemen',
+    edit_mute: 'Senyap',
+    edit_solo: 'Solo',
+    edit_volume: 'Kelantangan',
+    export_title: 'Eksport',
+    export_midi: 'Eksport MIDI',
+    export_mp3: 'Eksport MP3',
+    export_logic: 'Eksport Kit Logic Pro',
+    proc_humanizer: 'Humanizer',
+    proc_timing: 'Variasi Masa',
+    proc_velocity: 'Variasi Kelajuan',
+    proc_swing: 'Swing',
+    nav_back: 'Kembali',
+    nav_next: 'Seterusnya',
+    nav_back_to_site: '← zhouruby.com',
+    loading: 'Memuatkan...',
+    error: 'Ralat',
+    success: 'Berjaya',
+  },
+  ta: {
+    step_upload: 'பதிவேற்றம்',
+    step_analyze: 'பகுப்பாய்வு',
+    step_arrange: 'ஏற்பாடு',
+    step_edit: 'திருத்தம்',
+    step_export: 'ஏற்றுமதி',
+    upload_title: 'உங்கள் இசையை பதிவேற்றவும்',
+    upload_subtitle: 'ஆடியோ அல்லது MIDI கோப்பை இழுத்து விடவும்',
+    upload_formats: 'ஆதரவு: MIDI, MP3, WAV, MusicXML, CSV',
+    upload_or: 'அல்லது',
+    upload_browse: 'கோப்புகளை தேர்வு',
+    upload_demo: 'டெமோ ஏற்று',
+    upload_draw: 'கைமுறை வரைய',
+    analyze_title: 'பகுப்பாய்வு முடிவுகள்',
+    analyze_key: 'கண்டறியப்பட்ட சாவி',
+    analyze_bpm: 'BPM',
+    analyze_time_sig: 'தாள அடையாளம்',
+    analyze_bars: 'பட்டைகள்',
+    analyze_notes: 'குறிப்புகள்',
+    analyze_phrases: 'சொற்றொடர்கள்',
+    analyze_correct: 'தேவைப்பட்டால் கைமுறையாக திருத்தவும்',
+    arrange_title: 'ஏற்பாட்டை உருவாக்கு',
+    arrange_style: 'பாணி',
+    arrange_creativity: 'படைப்பாற்றல் நிலை',
+    arrange_conservative: 'பாரம்பரிய',
+    arrange_balanced: 'சமநிலை',
+    arrange_creative: 'படைப்பாற்றல்',
+    arrange_generate: 'உருவாக்கு',
+    arrange_generating: 'ஏற்பாடு உருவாக்கப்படுகிறது...',
+    edit_title: 'ஏற்பாட்டை திருத்து',
+    edit_mute: 'அமைதி',
+    edit_solo: 'தனி',
+    edit_volume: 'ஒலியளவு',
+    export_title: 'ஏற்றுமதி',
+    export_midi: 'MIDI ஏற்றுமதி',
+    export_mp3: 'MP3 ஏற்றுமதி',
+    export_logic: 'Logic Pro கிட் ஏற்றுமதி',
+    proc_humanizer: 'மனிதமயமாக்கி',
+    proc_timing: 'நேர மாறுபாடு',
+    proc_velocity: 'வேக மாறுபாடு',
+    proc_swing: 'ஊசல்',
+    nav_back: 'பின்செல்',
+    nav_next: 'அடுத்து',
+    nav_back_to_site: '← zhouruby.com',
+    loading: 'ஏற்றுகிறது...',
+    error: 'பிழை',
+    success: 'வெற்றி',
+  },
 };
-
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
 
 function detectLocale(): Locale {
-  const lang = navigator.language || '';
+  const lang = (navigator.language || '').toLowerCase();
   if (lang.startsWith('zh')) return 'zh';
+  if (lang.startsWith('ja')) return 'ja';
+  if (lang.startsWith('ms')) return 'ms';
+  if (lang.startsWith('ta')) return 'ta';
   return 'en';
 }
-
-// ---------------------------------------------------------------------------
-// Context (will be used via React.createElement in the provider)
-// ---------------------------------------------------------------------------
 
 interface I18nContextValue {
   locale: Locale;
@@ -193,30 +378,20 @@ interface I18nContextValue {
 }
 
 export const I18nContext = createContext<I18nContextValue>({
-  locale: 'zh',
+  locale: 'en',
   setLocale: () => {},
   t: (key) => key,
 });
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 export function useI18n() {
   return useContext(I18nContext);
 }
 
-// ---------------------------------------------------------------------------
-// Provider hook (returns value for the context provider)
-// ---------------------------------------------------------------------------
-
 export function useI18nProvider() {
   const [locale, setLocale] = useState<Locale>(detectLocale);
 
   const t = useCallback((key: string, vars?: Record<string, string | number>): string => {
-    const entry = translations[key];
-    if (!entry) return key;
-    let text = entry[locale] || entry['en'] || key;
+    let text = translations[locale][key] ?? translations.en[key] ?? key;
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         text = text.replace(`{${k}}`, String(v));

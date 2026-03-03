@@ -1,0 +1,353 @@
+/* ===== MIDI Player Component ===== */
+
+.midi-player {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 520px;
+}
+
+/* Header / drop zone */
+.midi-player__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.midi-player__title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
+
+.midi-player__file-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Drop zone for file upload */
+.midi-player__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  border: 2px dashed var(--border-color);
+  border-radius: 6px;
+  margin: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.midi-player__dropzone:hover,
+.midi-player__dropzone--active {
+  border-color: var(--brand-green);
+  background: var(--accent-success-soft);
+}
+
+.midi-player__dropzone-icon {
+  font-size: 28px;
+  color: var(--text-muted);
+}
+
+.midi-player__dropzone-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.midi-player__dropzone-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.midi-player__dropzone input[type="file"] {
+  display: none;
+}
+
+/* Transport controls */
+.midi-player__transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.midi-player__transport-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.midi-player__transport-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.midi-player__transport-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--text-muted);
+}
+
+.midi-player__transport-btn--play {
+  background: var(--accent-success) !important;
+  border-color: var(--accent-success) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.midi-player__transport-btn--play:hover {
+  background: var(--accent-success-strong) !important;
+}
+
+.midi-player__transport-btn--pause {
+  background: var(--accent-warning) !important;
+  border-color: var(--accent-warning) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.midi-player__transport-btn--pause:hover {
+  background: var(--accent-warning-strong) !important;
+}
+
+/* Progress bar */
+.midi-player__progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.midi-player__progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.midi-player__progress-fill {
+  height: 100%;
+  background: var(--brand-green);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+
+.midi-player__time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-highlight);
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Track list */
+.midi-player__tracks {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.midi-player__track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--track-divider);
+  transition: background var(--transition-fast);
+  min-height: 44px;
+}
+
+.midi-player__track:hover {
+  background: var(--track-hover);
+}
+
+.midi-player__track-color {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 0 2px 2px 0;
+  flex-shrink: 0;
+}
+
+.midi-player__track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.midi-player__track-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.midi-player__track-detail {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.midi-player__track-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.midi-player__track-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.midi-player__track-btn:hover {
+  border-color: var(--text-muted);
+}
+
+.midi-player__track-btn--mute-active {
+  background: var(--status-error);
+  border-color: var(--status-error);
+  color: var(--color-white);
+}
+
+.midi-player__track-btn--solo-active {
+  background: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+  color: var(--color-white);
+}
+
+/* Meta info footer */
+.midi-player__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.midi-player__meta-badge {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  background: var(--accent-primary-soft);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary-border);
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.midi-player__meta-badge--tempo {
+  background: var(--accent-success-soft);
+  color: var(--accent-success);
+  border-color: var(--accent-success-border);
+}
+
+/* Audio context prompt */
+.midi-player__audio-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: var(--accent-primary-soft);
+  border-bottom: 1px solid var(--accent-primary-border);
+  flex-shrink: 0;
+}
+
+.midi-player__audio-prompt-btn {
+  padding: 4px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  border: 1px solid var(--brand-green);
+  border-radius: 6px;
+  background: var(--brand-green);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.midi-player__audio-prompt-btn:hover {
+  background: var(--brand-green-dark);
+  border-color: var(--brand-green-dark);
+}
+
+/* Error state */
+.midi-player__error {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--status-error-text);
+  background: var(--status-error-soft);
+  border-bottom: 1px solid var(--status-error-border);
+  flex-shrink: 0;
+}
+
+/* New file button */
+.midi-player__new-file-btn {
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  border: 1px dashed var(--border-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.midi-player__new-file-btn:hover {
+  border-color: var(--brand-pink);
+  color: var(--brand-pink);
+}
