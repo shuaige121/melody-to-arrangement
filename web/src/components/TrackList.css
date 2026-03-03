@@ -1,0 +1,139 @@
+/* ===== Track List (Left Panel) ===== */
+.track-list {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.track-list__header {
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.track-list__empty {
+  padding: 20px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Track item */
+.track-list__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--track-divider);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  min-height: 48px;
+}
+
+.track-list__item:hover {
+  background: var(--track-hover);
+}
+
+.track-list__item--selected {
+  background: var(--track-selected);
+  border-left: none;
+}
+
+.track-list__item--selected:hover {
+  background: var(--track-selected-hover);
+}
+
+/* Color bar */
+.track-list__color-bar {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 0 2px 2px 0;
+  flex-shrink: 0;
+}
+
+/* Track info */
+.track-list__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.track-list__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-list__instrument {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Controls: M S Volume */
+.track-list__controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.track-list__btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.track-list__btn:hover {
+  border-color: var(--text-muted);
+}
+
+.track-list__btn--mute.track-list__btn--active {
+  background: var(--status-error);
+  border-color: var(--status-error);
+  color: var(--color-white);
+}
+
+.track-list__btn--solo.track-list__btn--active {
+  background: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+  color: var(--color-white);
+}
+
+/* Volume slider */
+.track-list__volume {
+  width: 48px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}

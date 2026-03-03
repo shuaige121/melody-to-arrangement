@@ -1,0 +1,111 @@
+:root {
+  /* Brand Colors */
+  --brand-green: #A5D97F;
+  --brand-green-dark: #7CB94F;
+  --brand-pink: #FF7F9F;
+  --brand-yellow: #FFD700;
+  --brand-blue: #ADD8E6;
+  --brand-blue-dark: #4682B4;
+  --brand-black: #000000;
+
+  /* DAW Colors */
+  --daw-bg: #1a1a2e;
+  --daw-bg-alt: #16213e;
+  --daw-surface: #0f3460;
+  --daw-surface-light: #1a4080;
+  --daw-border: rgba(255, 255, 255, 0.1);
+  --daw-text: #e0e0e0;
+  --daw-text-dim: #8899aa;
+
+  /* Track Colors (rotate for different tracks) */
+  --track-color-1: #A5D97F;
+  --track-color-2: #FF7F9F;
+  --track-color-3: #FFD700;
+  --track-color-4: #ADD8E6;
+  --track-color-5: #c49bff;
+  --track-color-6: #ff9b5c;
+
+  /* Sizing */
+  --sidebar-width: 240px;
+  --transport-height: 56px;
+  --piano-roll-height: 200px;
+
+  /* Fonts */
+  --font-display: 'Fredoka', 'Comic Neue', sans-serif;
+  --font-body: 'Nunito', 'Noto Sans SC', sans-serif;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* Workspace semantic tokens */
+  --bg-primary: var(--daw-bg);
+  --bg-secondary: var(--daw-bg-alt);
+  --bg-surface: var(--daw-surface);
+  --bg-elevated: var(--daw-surface-light);
+  --bg-input: #102b4f;
+
+  --accent-primary: var(--brand-blue-dark);
+  --accent-secondary: var(--brand-green-dark);
+  --accent-highlight: var(--brand-yellow);
+  --accent-success: var(--brand-green-dark);
+  --accent-warning: var(--brand-pink);
+
+  --text-primary: var(--daw-text);
+  --text-secondary: #b9c8d8;
+  --text-muted: var(--daw-text-dim);
+  --text-on-accent: #ffffff;
+
+  --border-color: var(--daw-border);
+  --border-focus: var(--brand-blue);
+
+  /* Welcome semantic tokens */
+  --welcome-bg: linear-gradient(180deg, #e7f2db 0%, #d6e8c7 100%);
+  --welcome-surface: rgba(255, 255, 255, 0.8);
+  --welcome-surface-hover: rgba(255, 255, 255, 0.92);
+  --welcome-border: rgba(124, 185, 79, 0.42);
+  --welcome-text-primary: #24402f;
+  --welcome-text-secondary: #4d6f57;
+  --welcome-text-muted: #6f8f73;
+  --welcome-title: #4f812f;
+
+  /* Status / overlays */
+  --status-error: #b71c1c;
+  --status-error-text: #ff8f8f;
+  --status-error-soft: rgba(255, 107, 107, 0.12);
+  --status-error-border: rgba(255, 107, 107, 0.35);
+  --overlay-backdrop: rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-drawer: 0 -14px 30px rgba(0, 0, 0, 0.25);
+  --color-white: #ffffff;
+
+  /* DAW interaction layers */
+  --track-divider: rgba(255, 255, 255, 0.08);
+  --track-hover: rgba(255, 255, 255, 0.05);
+  --track-selected: rgba(173, 216, 230, 0.16);
+  --track-selected-hover: rgba(173, 216, 230, 0.24);
+  --accent-primary-soft: rgba(173, 216, 230, 0.16);
+  --accent-primary-soft-strong: rgba(173, 216, 230, 0.46);
+  --accent-primary-border: rgba(173, 216, 230, 0.36);
+  --accent-success-soft: rgba(165, 217, 127, 0.16);
+  --accent-success-border: rgba(165, 217, 127, 0.36);
+  --accent-success-ring: 0 0 0 1px rgba(165, 217, 127, 0.45);
+  --accent-primary-surface: rgba(173, 216, 230, 0.09);
+  --accent-primary-surface-strong: rgba(173, 216, 230, 0.16);
+  --accent-success-strong: #659d3e;
+  --accent-warning-strong: #e26080;
+
+  --grid-line: rgba(255, 255, 255, 0.08);
+  --grid-line-soft: rgba(255, 255, 255, 0.05);
+  --grid-line-strong: rgba(255, 255, 255, 0.18);
+  --piano-black-key: #24354c;
+  --piano-black-cell: #1c3048;
+  --active-note-shadow: 0 0 4px rgba(173, 216, 230, 0.45);
+
+  /* Legacy aliases still used by existing components */
+  --header-height: var(--transport-height);
+  --controls-height: var(--transport-height);
+  --track-list-width: var(--sidebar-width);
+  --font-sans: var(--font-body);
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

@@ -1,0 +1,44 @@
+/* ===== Instrument Picker ===== */
+.instrument-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.instrument-picker__label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.instrument-picker__select {
+  width: 100%;
+  max-width: 260px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.instrument-picker__select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.instrument-picker__select optgroup {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+}
+
+.instrument-picker__select option {
+  font-weight: 400;
+  padding: 2px 8px;
+}
