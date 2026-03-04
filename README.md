@@ -1,174 +1,135 @@
-# Melody Architecture Lab
+# Logic Pro Audio Arranger
 
-Audio-to-Logic Pro arrangement toolkit: import melody audio/MIDI, analyze tonality, generate harmony + arrangement tracks, and export a macOS Logic-ready project kit.
+AI-powered MIDI arrangement engine with music theory guardrails. Feed it a melody MIDI — get back a full multi-track arrangement with drums, bass, piano, and chords.
 
-## What It Does
+**Rule-constrained LLM + classical music theory = arrangements that actually sound right.**
 
-- Input formats:
-  - `WAV / AIFF` (automatic monophonic melody transcription)
-  - `MIDI / MusicXML / CSV` (symbolic analysis)
-- Analysis:
-  - key estimation, phrase summary, harmony candidate ranking (`pop / modal / jazz`)
-- Output:
-  - JSON evidence report
-  - Markdown report
-  - Logic import kit (multi-track MIDI + macOS launcher scripts)
+## Features
 
-This project targets real workflows like:
-- `logic pro audio to midi`
-- `automatic arrangement for Logic Pro`
-- `melody harmonization and orchestration planning`
+- **Melody Analysis** — automatic key detection, tempo estimation, phrase segmentation, structure recognition
+- **Smart Arrangement** — LLM-guided strategy selection with rule-based pattern generation for drums, bass, piano, and chords
+- **Music Theory Guardrails** — key constraints, harmony validation, rhythm checks, range guards ensure musically correct output
+- **9 Styles** — Pop, Rock, Ballad, Jazz, EDM, R&B, Latin, Funk, Country
+- **6 Moods** — Happy, Sad, Energetic, Chill, Epic, Neutral
+- **Web DAW UI** — Logic Pro-style browser interface built with React + Tone.js ([live demo](https://zhouruby.com/arranger/))
+- **CLI + API** — Click CLI for batch processing, FastAPI server for integration
+- **Knowledge Base** — 8 curated music theory documents covering harmony, rhythm, composition, and MIDI toolchains
+
+## How It Works
+
+```
+Input MIDI → Melody Analysis → LLM Strategy Router → Pattern Generation → Guardrail Validation → Output MIDI
+```
+
+### 4-Layer Pipeline
+
+| Layer | Module | Role |
+|-------|--------|------|
+| **Analysis** | `arranger.analysis` | Key detection, tempo, structure, melody profiling |
+| **Strategy** | `arranger.engine.llm` | LLM selects style-appropriate progression, drum pattern, bass/piano style |
+| **Patterns** | `arranger.patterns` | Rule-based generators for drums, bass, chords, piano accompaniment |
+| **Guardrails** | `arranger.guardrails` | Post-generation validation: harmony, key, rhythm, range constraints |
 
 ## Quick Start
 
+### Install
+
 ```bash
-cd /home/leonard/melody-architecture-lab
+git clone https://github.com/shuaige121/logic-pro-audio-arranger.git
+cd logic-pro-audio-arranger
 uv sync
-uv run python -m melody_architect analyze examples/c_major_hook.csv --style pop --out-json out.json --out-md out.md
 ```
 
-Generate Logic kit directly:
+### Arrange a melody
 
 ```bash
-uv run python -m melody_architect logic-kit examples/c_major_hook.csv \
-  --style pop \
-  --complexity rich \
-  --arrangement-bars 32 \
-  --project-name "Demo Song" \
-  --output-dir ./logic_export
+arranger arrange -i melody.mid -s pop -m happy -o output.mid
 ```
 
-## How To Convert Audio To Logic Pro Project
+### Analyze a MIDI file
 
 ```bash
-uv run python -m melody_architect logic-kit INPUT.wav \
-  --style pop \
-  --complexity rich \
-  --arrangement-bars 64 \
-  --project-name "My Song" \
-  --output-dir ./logic_export
+arranger analyze -i melody.mid
 ```
 
-Then run `open_in_logic.command` in the output folder on macOS.
-
-## CLI Commands
-
-### `analyze`
+### Start the web server
 
 ```bash
-uv run python -m melody_architect analyze INPUT --style pop --out-json report.json --out-md report.md
+arranger serve
 ```
 
-`INPUT` supports `.csv/.mid/.midi/.musicxml/.xml/.wav/.aif/.aiff`.
-
-### `logic-kit`
+### List available styles
 
 ```bash
-uv run python -m melody_architect logic-kit INPUT.wav \
-  --style pop \
-  --complexity rich \
-  --arrangement-bars 32 \
-  --project-name "My Song" \
-  --output-dir ./logic_export
+arranger styles
 ```
 
-### `digitize` (audio -> composition JSON)
+## Web UI
+
+The browser-based DAW interface lives in `web/` — built with React 19, TypeScript, Vite, and Tone.js.
 
 ```bash
-uv run python -m melody_architect digitize INPUT.wav --style pop --out composition.json
+cd web
+npm install
+npm run dev
 ```
 
-### `midi-pack` (generate many MIDI bundles)
+Production build deployed at [zhouruby.com/arranger](https://zhouruby.com/arranger/) as part of Ruby's Music Rainforest.
+
+## Project Structure
+
+```
+src/arranger/
+├── analysis/       # Melody analysis (key, tempo, structure)
+├── engine/         # Arrangement engine (LLM strategy, tool definitions)
+├── guardrails/     # Music theory validators (harmony, key, rhythm, range)
+├── midi/           # MIDI I/O (parser, builder, merge)
+├── models/         # Pydantic data models (Note, Pattern, Arrangement, Guardrail)
+├── patterns/       # Pattern generators (drums, bass, chords, piano)
+├── web/            # FastAPI backend
+└── cli.py          # Click CLI entry point
+
+web/                # React + Tone.js DAW frontend
+knowledge/          # Music theory knowledge base (8 topics + RAG database)
+tests/              # Pytest suite
+```
+
+## Knowledge Base
+
+Curated music theory references used for RAG and LLM grounding:
+
+1. 实用乐理基础 — Practical Music Theory
+2. 和声与和弦进行 — Harmony & Chord Progressions
+3. 节奏与鼓组模式 — Rhythm & Drum Patterns
+4. 编曲理论与实践 — Arrangement Theory & Practice
+5. MIDI编曲与工具链 — MIDI Arrangement & Toolchain
+6. 音频转MIDI工具 — Audio-to-MIDI Tools
+7. RAG数据库设计方案 — RAG Database Design
+8. 项目架构设计 — Project Architecture
+
+## Tech Stack
+
+**Backend:** Python 3.12+, mido, Pydantic v2, Click, FastAPI, NumPy
+
+**Frontend:** React 19, TypeScript, Vite, Tone.js
+
+**AI:** Anthropic Claude API (optional — falls back to rule-based strategy)
+
+**Build:** Hatch, uv
+
+## Development
 
 ```bash
-uv run python -m melody_architect midi-pack INPUT.wav --output-dir ./midi_packs --project-prefix "Song Pack"
+# Install with dev dependencies
+uv sync --extra dev
+
+# Run tests
+uv run pytest
+
+# Lint
+uv run ruff check src/ tests/
 ```
 
-### `studio` (frontend + API)
+## License
 
-```bash
-uv run python -m melody_architect studio --host 127.0.0.1 --port 8765
-```
-
-Then open `http://127.0.0.1:8765`.
-
-Output bundle includes:
-
-- `logic_arrangement.mid`
-- `analysis_report.json`
-- `analysis_report.md`
-- `logic_track_map.json`
-- `open_in_logic.command` (macOS)
-- `create_logic_project.applescript` (macOS)
-
-For denser productions:
-- use `--complexity rich` for extra instruments (sub bass, arp, strings, counter melody, rhythm guitar, percussion)
-- use `--arrangement-bars 32` or `64` for longer form
-- default behavior loops melody motif to fill target length (disable via `--no-loop-melody`)
-
-## Can It Create `.logicx` Automatically?
-
-Not by directly writing Logic's private project format.
-
-Current behavior:
-- auto-generates a Logic-ready arrangement MIDI and opens Logic Pro via script
-- then prompts you to save as `.logicx`
-
-This avoids reverse-engineering proprietary `.logicx` internals while keeping workflow near one-click.
-
-## Input Notes
-
-### CSV columns
-
-- required: `pitch` or `pitch_midi`
-- required: `start` or `start_sec`
-- required: `end` or `end_sec`
-- optional: `velocity`
-
-### MusicXML
-
-- supports uncompressed `.musicxml/.xml`
-- `.mxl` should be re-exported as uncompressed XML first
-
-### Audio transcription scope
-
-- optimized for monophonic melody sources (vocal lead, solo instrument, top line)
-- best quality from clean stems exported from Logic
-
-## macOS App Packaging
-
-Build GUI app on macOS:
-
-```bash
-cd /home/leonard/melody-architecture-lab
-./scripts/build_macos_app.sh
-```
-
-Artifacts:
-
-- `dist/macos/MelodyLogicBuilder.app`
-- `dist/macos/open_terminal_cli.command`
-
-## GUI
-
-Launch local GUI:
-
-```bash
-uv run python -m melody_architect.gui
-```
-
-## Testing
-
-Run full test suite:
-
-```bash
-uv run python -m unittest discover -s tests -p 'test_*.py'
-```
-
-## SEO and Launch Assets
-
-- SEO checklist: `docs/SEO.md`
-- basic landing metadata:
-  - `site/index.html`
-  - `site/robots.txt`
-  - `site/sitemap.xml`
+MIT

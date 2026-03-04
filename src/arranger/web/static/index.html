@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 智能编曲工具 | Zhou Ruby Music Studio</title>
+  <meta name="description" content="用乐理栅栏约束 AI，让音乐工作者专注创作而非编曲。上传主旋律，AI 在乐理规则内自动编曲，下载多轨 MIDI。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== Design Tokens (from zhouruby.com) ===== */
+    :root {
+      --brand-green: #A5D97F;
+      --brand-green-dark: #7CB94F;
+      --brand-pink: #FF7F9F;
+      --brand-yellow: #FFD700;
+      --brand-blue: #ADD8E6;
+      --brand-blue-dark: #4682B4;
+      --brand-black: #000000;
+      --bg-main: #d6dfc8;
+      --bg-section: #c8d4b8;
+      --bg-card: #e8efda;
+      --text-body: #2d3b2d;
+      --font-display: 'Fredoka', 'Comic Neue', sans-serif;
+      --font-body: 'Nunito', 'Noto Sans SC', sans-serif;
+      --radius-card: 1rem;
+      --radius-full: 9999px;
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      color: var(--brand-black);
+      background: var(--bg-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    /* ===== Header ===== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      width: 100%;
+      background: rgba(200, 212, 184, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s;
+    }
+    .header-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: var(--shadow-md);
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--brand-green-dark);
+    }
+    .logo-text small {
+      display: block;
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.7rem;
+      color: var(--text-body);
+      opacity: 0.7;
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--brand-black);
+      transition: all 0.2s;
+    }
+    .header-links a:hover {
+      background: rgba(165, 217, 127, 0.15);
+      color: var(--brand-green-dark);
+    }
+    .header-links a svg { width: 18px; height: 18px; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #24506b 0%, #4682B4 40%, #7CB94F 100%);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 1440 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,30 C360,60 720,0 1080,30 C1260,45 1380,40 1440,35 L1440,60 L0,60 Z' fill='%23c8d4b8'/%3E%3C/svg%3E") no-repeat bottom center;
+      background-size: 100% 100%;
+    }
+    .hero-content { max-width: 48rem; margin: 0 auto; position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      border-radius: var(--radius-full);
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      line-height: 1.2;
+    }
+    .hero .subtitle {
+      font-family: var(--font-body);
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 1.5rem;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.25);
+      line-height: 1.6;
+    }
+    .hero .description {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.7;
+      max-width: 40rem;
+      margin: 0 auto 2rem;
+    }
+    .hero-cta {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      background: rgba(255,255,255,0.95);
+      color: var(--brand-blue-dark);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .hero-cta:hover {
+      background: #fff;
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-2px);
+    }
+    /* Floating decorative notes */
+    .hero .deco { position: absolute; opacity: 0.15; font-size: 3rem; pointer-events: none; }
+    .hero .deco-1 { top: 15%; left: 8%; animation: float 6s ease-in-out infinite; }
+    .hero .deco-2 { top: 25%; right: 6%; animation: float-delayed 8s ease-in-out infinite; }
+    .hero .deco-3 { bottom: 20%; left: 12%; animation: float-slow 4s ease-in-out infinite; }
+    .hero .deco-4 { bottom: 30%; right: 10%; animation: float 7s ease-in-out infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(3deg); }
+    }
+    @keyframes float-delayed {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-2deg); }
+    }
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* ===== Upload Section ===== */
+    .upload-section {
+      background: var(--bg-section);
+      padding: 4rem 1.5rem;
+    }
+    .upload-section .section-title {
+      text-align: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--brand-blue-dark);
+      margin-bottom: 0.5rem;
+    }
+    .upload-section .section-subtitle {
+      text-align: center;
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      color: var(--text-body);
+      margin-bottom: 2.5rem;
+    }
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      max-width: 56rem;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .upload-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Upload Card */
+    .upload-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-lg);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.3s;
+    }
+    .upload-card:hover { box-shadow: var(--shadow-xl); }
+    .upload-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .upload-card-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .upload-card-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--brand-blue-dark);
+    }
+    .upload-card-desc {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-body);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      position: relative;
+      border: 2px dashed var(--brand-green);
+      border-radius: 0.75rem;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: rgba(165, 217, 127, 0.06);
+      margin-bottom: 1.25rem;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--brand-green-dark);
+      background: rgba(165, 217, 127, 0.15);
+      transform: translateY(-1px);
+    }
+    .drop-zone.dragover {
+      box-shadow: 0 0 0 3px rgba(165, 217, 127, 0.3);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .drop-zone-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      opacity: 0.6;
+    }
+    .drop-zone-text {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text-body);
+    }
+    .drop-zone-text strong {
+      color: var(--brand-green-dark);
+    }
+    .drop-zone-hint {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.4rem;
+    }
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(165, 217, 127, 0.15);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--brand-green-dark);
+      font-weight: 600;
+    }
+    .file-info.visible { display: flex; }
+    .file-info .remove-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--brand-pink);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 0.25rem;
+    }
+    .warning-msg {
+      display: none;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 215, 0, 0.15);
+      border-left: 3px solid var(--brand-yellow);
+      border-radius: 0 0.5rem 0.5rem 0;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      color: #6b5900;
+      margin-bottom: 1rem;
+    }
+    .warning-msg.visible { display: block; }
+
+    /* Source Type Selector */
+    .source-selector {
+      margin-bottom: 1.25rem;
+    }
+    .source-selector label {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-body);
+      margin-bottom: 0.5rem;
+    }
+    .source-options {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .source-option {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--brand-blue);
+      background: transparent;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--brand-blue-dark);
+      cursor: pointer;
+      transition: all 0.25s;
+      text-align: center;
+    }
+    .source-option:hover {
+      background: rgba(173, 216, 230, 0.2);
+    }
+    .source-option.active {
+      background: var(--brand-green);
+      border-color: var(--brand-green);
+      color: #fff;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.75rem 2rem;
+      border-radius: var(--radius-full);
+      background: var(--brand-blue-dark);
+      color: #fff;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s;
+    }
+    .btn-primary:hover {
+      background: #1a3a5c;
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-2px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== Steps Section ===== */
+    .steps-section {
+      background: var(--bg-section);
+      padding: 4rem 1.5rem;
+    }
+    .steps-section .section-title {
+      text-align: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--brand-blue-dark);
+      margin-bottom: 0.5rem;
+    }
+    .steps-section .section-subtitle {
+      text-align: center;
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      color: var(--text-body);
+      margin-bottom: 3rem;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      max-width: 56rem;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .steps-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    .step-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-lg);
+      padding: 2rem;
+      text-align: center;
+      border-top: 4px solid var(--brand-green);
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .step-card:hover {
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-3px);
+    }
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-blue));
+      color: #fff;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-md);
+    }
+    .step-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .step-card h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--brand-blue-dark);
+      margin-bottom: 0.5rem;
+    }
+    .step-card p {
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text-body);
+      line-height: 1.6;
+    }
+    /* Step connectors (desktop only) */
+    @media (min-width: 768px) {
+      .steps-grid { position: relative; }
+      .step-connector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 2.75rem;
+        color: var(--brand-green);
+        font-size: 1.5rem;
+        z-index: 1;
+      }
+      .step-connector-1 { left: calc(33.33% - 0.75rem); }
+      .step-connector-2 { left: calc(66.66% - 0.75rem); }
+    }
+    @media (max-width: 767px) {
+      .step-connector { display: none; }
+    }
+
+    /* ===== CTA Section ===== */
+    .cta-section {
+      background: linear-gradient(135deg, #7aab6b 0%, #9cc48d 40%, #b5d4a0 100%);
+      padding: 5rem 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section .deco { position: absolute; opacity: 0.12; font-size: 4rem; pointer-events: none; }
+    .cta-section .deco-1 { top: 10%; left: 5%; animation: float 6s ease-in-out infinite; }
+    .cta-section .deco-2 { bottom: 15%; right: 8%; animation: float-delayed 8s ease-in-out infinite; }
+    .cta-section h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .cta-section p {
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 2rem;
+      max-width: 32rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2.5rem;
+      border-radius: var(--radius-full);
+      background: #fff;
+      color: var(--brand-green-dark);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s;
+    }
+    .btn-cta:hover {
+      background: var(--brand-blue-dark);
+      color: #fff;
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-2px);
+    }
+    .btn-cta svg { width: 24px; height: 24px; }
+
+    /* ===== Footer ===== */
+    .site-footer {
+      background: var(--brand-blue-dark);
+      color: #fff;
+      padding: 3rem 1.5rem 2rem;
+    }
+    .footer-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    @media (min-width: 640px) {
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 1024px) {
+      .footer-inner { grid-template-columns: 2fr 1fr 1fr; }
+    }
+    .footer-brand h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--brand-yellow);
+      margin-bottom: 0.5rem;
+    }
+    .footer-brand p {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+    }
+    .footer-links h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-green);
+      margin-bottom: 0.75rem;
+    }
+    .footer-links ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .footer-links a {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--brand-green); }
+    .footer-tech h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-green);
+      margin-bottom: 0.75rem;
+    }
+    .footer-tech ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .footer-tech li {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.7);
+    }
+    .footer-bottom {
+      max-width: 72rem;
+      margin: 2rem auto 0;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+    }
+    @media (min-width: 640px) {
+      .footer-bottom { flex-direction: row; justify-content: space-between; }
+    }
+    .footer-bottom p {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+    }
+    .footer-bottom a {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      transition: color 0.2s;
+    }
+    .footer-bottom a:hover { color: rgba(255,255,255,0.7); }
+
+    /* ===== Responsive ===== */
+    @media (min-width: 768px) {
+      .hero { padding: 6rem 2rem 5rem; }
+      .hero h1 { font-size: 3.2rem; }
+      .hero .subtitle { font-size: 1.35rem; }
+    }
+    @media (min-width: 1024px) {
+      .hero h1 { font-size: 3.8rem; }
+    }
+
+    /* Mobile header adjustments */
+    @media (max-width: 639px) {
+      .logo-text { font-size: 0.95rem; }
+      .logo-text small { display: none; }
+      .header-links .link-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">&#127929;</div>
+        <div class="logo-text">
+          AI 智能编曲
+          <small>Logic Pro Audio Arranger</small>
+        </div>
+      </a>
+      <div class="header-links">
+        <a href="https://zhouruby.com" target="_blank" rel="noopener noreferrer">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1m-4 0h4"/></svg>
+          <span class="link-label">Ruby's Studio</span>
+        </a>
+        <a href="https://github.com/shuaige121/logic-pro-audio-arranger" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span class="link-label">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <span class="deco deco-1">&#9835;</span>
+    <span class="deco deco-2">&#127932;</span>
+    <span class="deco deco-3">&#127925;</span>
+    <span class="deco deco-4">&#9834;</span>
+    <div class="hero-content">
+      <div class="hero-badge">&#127929; Zhou Ruby Music Studio</div>
+      <h1>AI 智能编曲工具</h1>
+      <p class="subtitle">用乐理栅栏约束 AI，让音乐工作者专注创作而非编曲</p>
+      <p class="description">
+        Suno、Google AI Music 等工具像随机抽卡，生成的结果不可控。而音乐工作者需要的是精细化定位 -- 修改某个音轨、调整和声走向、控制节奏型的高阶能力。这个工具让你专注于旋律创作，编曲交给 AI 在乐理规则内完成。
+      </p>
+      <a href="#upload" class="hero-cta">开始使用</a>
+    </div>
+  </section>
+
+  <!-- ===== UPLOAD SECTION ===== -->
+  <section id="upload" class="upload-section">
+    <h2 class="section-title">上传你的主旋律</h2>
+    <p class="section-subtitle">支持音频文件、MIDI 和 DAW 工程文件</p>
+
+    <div class="upload-grid">
+      <!-- LEFT: Audio Upload -->
+      <div class="upload-card">
+        <div class="upload-card-header">
+          <span class="upload-card-icon">&#127925;</span>
+          <h3 class="upload-card-title">上传音频文件</h3>
+        </div>
+        <p class="upload-card-desc">
+          上传 mp3 或 wav 格式的音频文件，AI 将自动识别旋律并转换为 MIDI。建议提供单音轨录音以获得最佳识别效果。
+        </p>
+
+        <div class="drop-zone" id="audioDropZone">
+          <input type="file" accept=".mp3,.wav" id="audioFileInput" />
+          <div class="drop-zone-icon">&#128229;</div>
+          <p class="drop-zone-text">拖拽文件到此处，或 <strong>点击选择</strong></p>
+          <p class="drop-zone-hint">支持 .mp3, .wav 格式</p>
+        </div>
+
+        <div class="file-info" id="audioFileInfo">
+          <span>&#127925;</span>
+          <span id="audioFileName">-</span>
+          <button class="remove-btn" id="audioRemoveBtn" title="移除文件">&times;</button>
+        </div>
+
+        <div class="warning-msg" id="audioWarning">
+          &#9888; 检测到文件可能包含多音轨内容，建议提供单音轨文件以提高识别准确度。
+        </div>
+
+        <div class="source-selector">
+          <label>选择音源类型</label>
+          <div class="source-options">
+            <button class="source-option" data-value="vocal" onclick="selectSource(this)">&#127908; 人声</button>
+            <button class="source-option active" data-value="piano" onclick="selectSource(this)">&#127929; 钢琴</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="audioSubmitBtn" disabled onclick="submitAudio()">
+          开始转换为 MIDI
+        </button>
+      </div>
+
+      <!-- RIGHT: MIDI / Project Upload -->
+      <div class="upload-card">
+        <div class="upload-card-header">
+          <span class="upload-card-icon">&#127929;</span>
+          <h3 class="upload-card-title">上传 MIDI 或工程文件</h3>
+        </div>
+        <p class="upload-card-desc">
+          支持 MIDI 文件和主流 DAW 工程文件。工程文件将自动提取 MIDI 数据并清理不相关内容，直接进入编曲流程。
+        </p>
+
+        <div class="drop-zone" id="midiDropZone">
+          <input type="file" accept=".mid,.midi,.logicx,.als,.flp" id="midiFileInput" />
+          <div class="drop-zone-icon">&#128196;</div>
+          <p class="drop-zone-text">拖拽文件到此处，或 <strong>点击选择</strong></p>
+          <p class="drop-zone-hint">支持 .mid, .midi, .logicx, .als, .flp 格式</p>
+        </div>
+
+        <div class="file-info" id="midiFileInfo">
+          <span>&#127929;</span>
+          <span id="midiFileName">-</span>
+          <button class="remove-btn" id="midiRemoveBtn" title="移除文件">&times;</button>
+        </div>
+
+        <button class="btn-primary" id="midiSubmitBtn" disabled onclick="submitMidi()">
+          开始编曲
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STEPS SECTION ===== -->
+  <section class="steps-section">
+    <h2 class="section-title">三步完成编曲</h2>
+    <p class="section-subtitle">简单流程，专业成果</p>
+
+    <div class="steps-grid">
+      <div class="step-connector step-connector-1">&#10140;</div>
+      <div class="step-connector step-connector-2">&#10140;</div>
+
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-icon">&#128228;</div>
+        <h3>上传主旋律</h3>
+        <p>上传你的音频录音、MIDI 文件或 DAW 工程文件（Logic Pro / Ableton / FL Studio）</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-icon">&#127912;</div>
+        <h3>选择风格与心情</h3>
+        <p>选择编曲风格和情绪基调，AI 在乐理规则内自动生成和声、贝斯、鼓组等伴奏轨</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-icon">&#128190;</div>
+        <h3>下载多轨 MIDI</h3>
+        <p>导出多轨 MIDI 文件，直接导入你的 DAW 继续精细调整和混音</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA SECTION ===== -->
+  <section class="cta-section">
+    <span class="deco deco-1">&#127926;</span>
+    <span class="deco deco-2">&#127927;</span>
+    <h2>开源免费，专为音乐人打造</h2>
+    <p>基于乐理规则的 AI 编曲引擎，让每一个音符都有据可循。欢迎参与贡献！</p>
+    <a href="https://github.com/shuaige121/logic-pro-audio-arranger" target="_blank" rel="noopener noreferrer" class="btn-cta">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub 仓库
+    </a>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h3>AI 智能编曲工具</h3>
+        <p>Logic Pro Audio Arranger<br>用乐理栅栏约束 AI，让音乐工作者专注创作。<br>By Ruby 老师 / Zhou Ruby Music Studio</p>
+      </div>
+      <div class="footer-links">
+        <h4>链接</h4>
+        <ul>
+          <li><a href="https://github.com/shuaige121/logic-pro-audio-arranger" target="_blank" rel="noopener noreferrer">GitHub 仓库</a></li>
+          <li><a href="https://zhouruby.com" target="_blank" rel="noopener noreferrer">Zhou Ruby Music Studio</a></li>
+          <li><a href="https://github.com/shuaige121/logic-pro-audio-arranger/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT 开源协议</a></li>
+        </ul>
+      </div>
+      <div class="footer-tech">
+        <h4>技术栈</h4>
+        <ul>
+          <li>Python / FastAPI</li>
+          <li>Tone.js / Web Audio</li>
+          <li>AI 乐理引擎</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024-2026 Zhou Ruby Music Studio. All rights reserved.</p>
+      <a href="https://github.com/shuaige121/logic-pro-audio-arranger/blob/main/LICENSE">MIT License</a>
+    </div>
+  </footer>
+
+  <!-- ===== JavaScript ===== -->
+  <script>
+    // ========== Drag & Drop + File Selection ==========
+    let audioFile = null;
+    let midiFile = null;
+    let selectedSource = 'piano';
+
+    function setupDropZone(dropZoneId, fileInputId, fileInfoId, fileNameId, removeBtnId, submitBtnId, warningId, onFile) {
+      const dropZone = document.getElementById(dropZoneId);
+      const fileInput = document.getElementById(fileInputId);
+      const fileInfo = document.getElementById(fileInfoId);
+      const fileName = document.getElementById(fileNameId);
+      const removeBtn = document.getElementById(removeBtnId);
+      const submitBtn = document.getElementById(submitBtnId);
+      const warning = warningId ? document.getElementById(warningId) : null;
+
+      // Drag events
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('dragover');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) handleFile(files[0]);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+      });
+
+      removeBtn.addEventListener('click', () => {
+        onFile(null);
+        fileInfo.classList.remove('visible');
+        if (warning) warning.classList.remove('visible');
+        submitBtn.disabled = true;
+        fileInput.value = '';
+      });
+
+      function handleFile(file) {
+        onFile(file);
+        fileName.textContent = file.name + ' (' + formatSize(file.size) + ')';
+        fileInfo.classList.add('visible');
+        submitBtn.disabled = false;
+
+        // Show warning for large audio files (likely multi-track)
+        if (warning && file.size > 15 * 1024 * 1024) {
+          warning.classList.add('visible');
+        } else if (warning) {
+          warning.classList.remove('visible');
+        }
+      }
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Source type selector
+    function selectSource(btn) {
+      const siblings = btn.parentElement.querySelectorAll('.source-option');
+      siblings.forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSource = btn.dataset.value;
+    }
+
+    // Submit handlers
+    async function submitAudio() {
+      if (!audioFile) return;
+      const btn = document.getElementById('audioSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = '正在上传...';
+
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      formData.append('source_type', selectedSource);
+
+      try {
+        const resp = await fetch('/api/upload/audio', { method: 'POST', body: formData });
+        const data = await resp.json();
+        alert('上传成功！\n\n' + data.message + '\n文件: ' + data.filename + '\n音源类型: ' + data.source_type);
+      } catch (err) {
+        alert('上传失败，请重试。\n' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '开始转换为 MIDI';
+      }
+    }
+
+    async function submitMidi() {
+      if (!midiFile) return;
+      const btn = document.getElementById('midiSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = '正在上传...';
+
+      const formData = new FormData();
+      formData.append('file', midiFile);
+
+      try {
+        const resp = await fetch('/api/upload/midi', { method: 'POST', body: formData });
+        const data = await resp.json();
+        alert('上传成功！\n\n' + data.message + '\n文件: ' + data.filename);
+      } catch (err) {
+        alert('上传失败，请重试。\n' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '开始编曲';
+      }
+    }
+
+    // Initialize drop zones
+    document.addEventListener('DOMContentLoaded', () => {
+      setupDropZone(
+        'audioDropZone', 'audioFileInput', 'audioFileInfo', 'audioFileName',
+        'audioRemoveBtn', 'audioSubmitBtn', 'audioWarning',
+        (file) => { audioFile = file; }
+      );
+      setupDropZone(
+        'midiDropZone', 'midiFileInput', 'midiFileInfo', 'midiFileName',
+        'midiRemoveBtn', 'midiSubmitBtn', null,
+        (file) => { midiFile = file; }
+      );
+    });
+  </script>
+</body>
+</html>
