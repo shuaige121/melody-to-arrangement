@@ -3,11 +3,14 @@
  *
  * Parses uploaded music files into NoteEvent arrays.
  * - MIDI files: parsed client-side using @tonejs/midi
- * - Audio/other files: sent to backend /api/digitize endpoint
+ * - MusicXML files: parsed client-side
+ * - Audio files: parsed client-side
  */
 
 import { Midi } from '@tonejs/midi';
 import type { NoteEvent } from '../types/music.ts';
+import { parseMusicXmlFile } from './musicxml-parser.ts';
+import { parseAudioFile } from './audio-parser.ts';
 
 // ---------------------------------------------------------------------------
 // MIDI client-side parsing
@@ -96,8 +99,9 @@ export async function uploadFileToBackend(
 // Unified file handler
 // ---------------------------------------------------------------------------
 
-/** File extensions that can be parsed client-side (MIDI). */
-const CLIENT_PARSEABLE = new Set(['.mid', '.midi']);
+const MIDI_EXTENSIONS = new Set(['.mid', '.midi']);
+const MUSICXML_EXTENSIONS = new Set(['.xml', '.musicxml', '.mxl']);
+const AUDIO_EXTENSIONS = new Set(['.wav', '.aif', '.aiff', '.mp3', '.flac', '.ogg', '.aac', '.m4a', '.wma', '.opus']);
 
 /** All supported file extensions. */
 export const SUPPORTED_EXTENSIONS = [
@@ -105,25 +109,32 @@ export const SUPPORTED_EXTENSIONS = [
   '.wav', '.aif', '.aiff',
   '.mp3', '.flac', '.ogg', '.aac', '.m4a', '.wma', '.opus',
   '.xml', '.musicxml', '.mxl',
-  '.csv',
 ];
 
 /**
  * Parse any supported music file.
- * MIDI files are parsed client-side; everything else goes to the backend.
+ * Supported formats are parsed client-side.
  */
 export async function parseFile(
   file: File,
-  style = 'pop',
+  _style = 'pop',
 ): Promise<{ notes: NoteEvent[]; tempoBpm: number; source: 'client' | 'server'; summary?: { key: string } }> {
   const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
 
-  if (CLIENT_PARSEABLE.has(ext)) {
+  if (MIDI_EXTENSIONS.has(ext)) {
     const result = await parseMidiFile(file);
     return { ...result, source: 'client' };
   }
 
-  // Send to backend
-  const result = await uploadFileToBackend(file, style);
-  return { ...result, source: 'server' };
+  if (MUSICXML_EXTENSIONS.has(ext)) {
+    const result = await parseMusicXmlFile(file);
+    return { ...result, source: 'client' };
+  }
+
+  if (AUDIO_EXTENSIONS.has(ext)) {
+    const result = await parseAudioFile(file);
+    return { ...result, source: 'client' };
+  }
+
+  throw new Error(`Unsupported file format: ${ext}`);
 }

@@ -121,3 +121,105 @@
   background: var(--accent-primary-soft-strong) !important;
   border-radius: 2px;
 }
+
+/* Toolbar */
+.piano-roll__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.piano-roll__mode-btn {
+  padding: 2px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.piano-roll__mode-btn:hover {
+  background: var(--accent-primary-soft);
+}
+
+.piano-roll__mode-btn--active {
+  background: var(--lp-blue);
+  color: #fff;
+  border-color: var(--lp-blue);
+}
+
+/* Selected notes */
+.piano-roll__cell--selected {
+  background: var(--lp-green, #4CAF50) !important;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.3);
+}
+
+/* Ghost/preview during move */
+.piano-roll__cell--ghost {
+  background: rgba(100, 180, 255, 0.35) !important;
+  border-radius: 2px;
+  border: 1px dashed var(--lp-blue);
+}
+
+/* Resize handle cursor */
+.piano-roll__cell--resize-handle {
+  cursor: ew-resize;
+}
+
+/* Velocity bar inside active cells */
+.piano-roll__velocity-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 0 0 2px 2px;
+  pointer-events: none;
+}
+
+/* Note label inside cells */
+.piano-roll__note-label {
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  font-size: 7px;
+  font-family: var(--font-mono);
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Make active cells position relative (for absolute children) */
+.piano-roll__cell--active,
+.piano-roll__cell--selected {
+  position: relative;
+}
+
+/* Scrollable area improvements */
+.piano-roll__scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.piano-roll__header-scroll {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.piano-roll__key {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}

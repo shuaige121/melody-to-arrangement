@@ -75,3 +75,9 @@ export { generateArrangementWithAI } from './gemini-arranger';
 
 // File Parser module
 export { parseFile, parseMidiFile, uploadFileToBackend, SUPPORTED_EXTENSIONS } from './file-parser';
+
+// MusicXML Parser module
+export { parseMusicXmlFile } from './musicxml-parser';
+
+// Audio Parser module
+export { parseAudioFile } from './audio-parser';
