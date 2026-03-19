@@ -19,6 +19,7 @@ from arranger.patterns.bass import generate_bass_line
 from arranger.patterns.chords import resolve_progression
 from arranger.patterns.drums import DRUM_PATTERNS, drum_pattern_to_notes
 from arranger.patterns.piano import generate_piano_comp
+from arranger.patterns.timing import bar_ticks
 
 try:
     from arranger.guardrails.validator import validate_and_fix, create_guardrails
@@ -70,11 +71,11 @@ def _resolve_drum_pattern(style_name: str) -> dict[str, Any]:
     return DRUM_PATTERNS[first_key]
 
 
-def _build_drum_track(pattern: dict[str, Any], bars: int, ppq: int) -> list[Note]:
-    bar_ticks = max(1, ppq * 4)
+def _build_drum_track(pattern: dict[str, Any], bars: int, ppq: int, time_sig: tuple[int, int]) -> list[Note]:
+    ticks_per_bar = bar_ticks(ppq, time_sig)
     notes: list[Note] = []
     for bar_idx in range(max(1, bars)):
-        notes.extend(drum_pattern_to_notes(pattern, bar_idx * bar_ticks, ppq))
+        notes.extend(drum_pattern_to_notes(pattern, bar_idx * ticks_per_bar, ppq, time_sig=time_sig))
     return notes
 
 
@@ -164,9 +165,9 @@ def arrange_melody(
     total_bars = max(1, int(getattr(analysis, "total_bars", 1) or 1))
 
     drum_pattern = _resolve_drum_pattern(strategy.drum_style)
-    drum_notes = _build_drum_track(pattern=drum_pattern, bars=total_bars, ppq=ppq)
-    bass_notes = generate_bass_line(chords=chords, style=strategy.bass_style, bars=total_bars, ppq=ppq)
-    piano_notes = generate_piano_comp(chords=chords, style=strategy.piano_style, bars=total_bars, ppq=ppq)
+    drum_notes = _build_drum_track(pattern=drum_pattern, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
+    bass_notes = generate_bass_line(chords=chords, style=strategy.bass_style, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
+    piano_notes = generate_piano_comp(chords=chords, style=strategy.piano_style, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
 
     drum_notes = _validate_track_notes(drum_notes, analysis=analysis, strategy=strategy, track_name="drums")
     bass_notes = _validate_track_notes(bass_notes, analysis=analysis, strategy=strategy, track_name="bass")

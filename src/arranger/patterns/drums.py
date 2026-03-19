@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from arranger.models.note import Note
+from arranger.patterns.timing import backbeat_indices, beat_ticks, normalize_time_sig, primary_beat_indices, bar_ticks
 
 KICK = 36
 SNARE = 38
@@ -138,8 +139,74 @@ def get_drum_pattern(style: str) -> dict:
     raise ValueError(f"Unknown drum pattern style: '{style}'")
 
 
-def drum_pattern_to_notes(pattern: dict, bar_start_tick: int, ppq: int = 480) -> list[Note]:
+def _append_note(notes: list[Note], note_number: int, velocity: int, start_tick: int, duration_tick: int) -> None:
+    notes.append(
+        Note(
+            note_number=int(note_number),
+            velocity=max(0, min(127, int(velocity))),
+            start_tick=max(0, int(start_tick)),
+            duration_tick=max(1, int(duration_tick)),
+            channel=9,
+        )
+    )
+
+
+def _generic_pattern_to_notes(
+    pattern: dict,
+    bar_start_tick: int,
+    ppq: int = 480,
+    time_sig: tuple[int, int] = (4, 4),
+) -> list[Note]:
+    beats_per_bar, beat_unit = normalize_time_sig(time_sig)
+    beat_tick = beat_ticks(ppq, time_sig)
+    bar_tick_count = bar_ticks(ppq, time_sig)
+    strong_beats = set(primary_beat_indices(time_sig))
+    backbeats = set(backbeat_indices(time_sig))
+    tags = pattern.get("tags", {})
+    genres = {str(item).lower() for item in tags.get("genre", []) if item}
+    velocity_map: dict[int, int] = pattern.get("velocity", {})
+
+    notes: list[Note] = []
+    note_duration = max(1, beat_tick // 2)
+    is_jazz = "jazz" in genres or "swing" in str(pattern.get("name", "")).lower()
+
+    for beat in range(beats_per_bar):
+        start_tick = bar_start_tick + beat * beat_tick
+        if start_tick >= bar_start_tick + bar_tick_count:
+            break
+
+        if is_jazz:
+            _append_note(notes, RIDE, velocity_map.get(RIDE, 72), start_tick, note_duration)
+            if beat in strong_beats:
+                _append_note(notes, KICK, velocity_map.get(KICK, 84), start_tick, note_duration)
+            if beat in backbeats:
+                _append_note(notes, SNARE, velocity_map.get(SNARE, 70), start_tick, note_duration)
+            continue
+
+        _append_note(notes, CHH, velocity_map.get(CHH, 68), start_tick, note_duration)
+        if beat in strong_beats:
+            _append_note(notes, KICK, velocity_map.get(KICK, 96), start_tick, note_duration)
+        if beat in backbeats:
+            _append_note(notes, SNARE, velocity_map.get(SNARE, 88), start_tick, note_duration)
+
+        if beat_unit == 4:
+            offbeat_tick = start_tick + max(1, beat_tick // 2)
+            if offbeat_tick < bar_start_tick + bar_tick_count:
+                _append_note(notes, CHH, max(1, velocity_map.get(CHH, 68) - 10), offbeat_tick, max(1, note_duration // 2))
+
+    return notes
+
+
+def drum_pattern_to_notes(
+    pattern: dict,
+    bar_start_tick: int,
+    ppq: int = 480,
+    time_sig: tuple[int, int] = (4, 4),
+) -> list[Note]:
     """Convert one bar of grid pattern into MIDI Note events on channel 9."""
+    if normalize_time_sig(time_sig) != (4, 4):
+        return _generic_pattern_to_notes(pattern, bar_start_tick, ppq=ppq, time_sig=time_sig)
+
     steps = int(pattern["steps"])
     step_tick = max(1, (ppq * 4) // steps)
     duration_tick = max(1, step_tick // 2)
@@ -153,13 +220,5 @@ def drum_pattern_to_notes(pattern: dict, bar_start_tick: int, ppq: int = 480) ->
         velocity = max(0, min(127, int(velocity_map.get(int(note_number), 80))))
         for idx, hit in enumerate(grid):
             if hit:
-                notes.append(
-                    Note(
-                        note_number=int(note_number),
-                        velocity=velocity,
-                        start_tick=bar_start_tick + idx * step_tick,
-                        duration_tick=duration_tick,
-                        channel=9,
-                    )
-                )
+                _append_note(notes, int(note_number), velocity, bar_start_tick + idx * step_tick, duration_tick)
     return notes

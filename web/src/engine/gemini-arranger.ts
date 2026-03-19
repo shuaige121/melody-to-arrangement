@@ -7,6 +7,7 @@
 
 import type { NoteEvent, Arrangement, ArrangementTrack, KeyEstimate } from '../types/music.ts';
 import { estimateKey, inferBarCount, generateHarmony, buildArrangement } from './index.ts';
+import { backendStyleForWebStyle, generateArrangementWithBackend } from './backend-arranger.ts';
 import { beatUnitSeconds, secondsPerBar } from './time-signature.ts';
 
 type CreativityLevel = 'conservative' | 'balanced' | 'creative';
@@ -239,6 +240,22 @@ export async function generateArrangementWithAI(
   const key = immutable.key;
   const barCount = Math.max(inferBarCount(melody, immutable.tempoBpm, immutable.beatsPerBar, immutable.beatUnit) || bars, bars);
   const totalDuration = barCount * secondsPerBar(immutable.tempoBpm, immutable.beatsPerBar, immutable.beatUnit);
+
+  if (backendStyleForWebStyle(style)) {
+    try {
+      const arrangement = await generateArrangementWithBackend(
+        melody,
+        immutable.tempoBpm,
+        immutable.beatsPerBar,
+        immutable.beatUnit,
+        style,
+        complexity,
+      );
+      return { arrangement: enforceImmutableArrangement(arrangement, immutable), aiGenerated: false, key: immutable.key, harmony: null };
+    } catch (err) {
+      console.warn('Backend arranger failed, falling back to browser generation:', err);
+    }
+  }
 
   // Try Gemini first when key is available.
   if (GEMINI_API_KEY) {
