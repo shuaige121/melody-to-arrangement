@@ -7,29 +7,17 @@ interface FileUploadProps {
   isProcessing: boolean;
   error: string | null;
   supportedFormats: string[];
-  sourceType?: string;
-  onSourceTypeChange?: (type: string) => void;
 }
-
-const SOURCE_TYPE_OPTIONS = [
-  { value: 'vocal', label: 'Vocal', description: 'Acapella' },
-  { value: 'piano', label: 'Piano', description: 'Piano recording' },
-  { value: 'guitar', label: 'Guitar', description: 'Guitar recording' },
-  { value: 'other', label: 'Other', description: 'Other instrument' },
-] as const;
 
 export default function FileUpload({
   onFileSelected,
   isProcessing,
   error,
   supportedFormats,
-  sourceType,
-  onSourceTypeChange,
 }: FileUploadProps) {
   const { t } = useI18n();
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const selectedSourceType = sourceType ?? 'vocal';
 
   const acceptString = supportedFormats.join(',');
 
@@ -82,33 +70,11 @@ export default function FileUpload({
             <div className="file-upload__title">{isDragOver ? t('upload.dropHere') : t('upload.dragDrop')}</div>
             <div className="file-upload__subtitle">{t('upload_browse')}</div>
             <div className="file-upload__formats">{t('upload_formats')}</div>
+            <div className="file-upload__hint">{t('upload_hint')}</div>
           </>
         )}
 
         {error && <div className="file-upload__error">{error}</div>}
-      </div>
-
-      <div className="file-upload__source-type">
-        <div className="file-upload__source-title">Source Type</div>
-        <div className="file-upload__source-options">
-          {SOURCE_TYPE_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={`file-upload__source-option ${selectedSourceType === option.value ? 'file-upload__source-option--active' : ''}`}
-            >
-              <input
-                type="radio"
-                name="source-type"
-                value={option.value}
-                checked={selectedSourceType === option.value}
-                onChange={() => onSourceTypeChange?.(option.value)}
-                className="file-upload__source-radio"
-              />
-              <span className="file-upload__source-label">{option.label}</span>
-              <span className="file-upload__source-desc">{option.description}</span>
-            </label>
-          ))}
-        </div>
       </div>
     </div>
   );

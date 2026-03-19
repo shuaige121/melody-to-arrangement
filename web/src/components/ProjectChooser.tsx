@@ -8,8 +8,6 @@ interface ProjectChooserProps {
   onFileSelected: (file: File) => void;
   isProcessing: boolean;
   uploadError: string | null;
-  sourceType: string;
-  onSourceTypeChange: (type: string) => void;
   onLoadDemo: () => void;
   onDrawManually: () => void;
   tempo: number;
@@ -27,8 +25,6 @@ export default function ProjectChooser({
   onFileSelected,
   isProcessing,
   uploadError,
-  sourceType,
-  onSourceTypeChange,
   onLoadDemo,
   onDrawManually,
   tempo,
@@ -52,8 +48,6 @@ export default function ProjectChooser({
           isProcessing={isProcessing}
           error={uploadError}
           supportedFormats={SUPPORTED_EXTENSIONS}
-          sourceType={sourceType}
-          onSourceTypeChange={onSourceTypeChange}
         />
 
         <div className="project-chooser__actions">

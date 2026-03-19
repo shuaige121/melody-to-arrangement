@@ -59,6 +59,12 @@ arranger analyze -i melody.mid
 arranger serve
 ```
 
+`arranger serve` exposes the FastAPI endpoints immediately. For the full React DAW UI, build the frontend first:
+
+```bash
+cd web && npm install && npm run build
+```
+
 ### List available styles
 
 ```bash
@@ -72,6 +78,10 @@ A browser-based DAW interface built with React 19, TypeScript, Vite, and Tone.js
 ```bash
 cd web && npm install && npm run dev
 ```
+
+Current input support in the web app:
+- MIDI and MusicXML are first-class inputs.
+- Audio import uses a lightweight browser-side monophonic estimator and works best on clean single-note melodies.
 
 ## Project Structure
 

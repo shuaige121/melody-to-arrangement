@@ -62,3 +62,16 @@ def test_arrange_api_returns_midi_file():
         if message.type == "track_name"
     }
     assert {"Lead Melody", "Drums", "Bass", "Piano"}.issubset(track_names)
+
+
+def test_upload_audio_api_returns_not_implemented():
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/upload/audio",
+        data={"source_type": "vocal"},
+        files={"file": ("melody.wav", b"not-a-real-wave", "audio/wav")},
+    )
+
+    assert response.status_code == 501
+    assert "not available in this build" in response.json()["detail"]

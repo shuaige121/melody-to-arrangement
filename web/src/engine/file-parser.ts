@@ -4,7 +4,7 @@
  * Parses uploaded music files into NoteEvent arrays.
  * - MIDI files: parsed client-side using @tonejs/midi
  * - MusicXML files: parsed client-side
- * - Audio files: parsed client-side
+ * - Audio files: parsed client-side using a lightweight monophonic estimator
  */
 
 import { Midi } from '@tonejs/midi';
@@ -53,55 +53,6 @@ export async function parseMidiFile(file: File): Promise<{ notes: NoteEvent[]; t
 }
 
 // ---------------------------------------------------------------------------
-// Backend upload for audio files
-// ---------------------------------------------------------------------------
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8765';
-
-/**
- * Upload a file to the backend for digitization.
- * The backend handles audio analysis, pitch detection, etc.
- */
-export async function uploadFileToBackend(
-  file: File,
-  style = 'pop',
-): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string; summary?: { key: string } }> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('style', style);
-
-  const response = await fetch(`${BACKEND_URL}/api/digitize`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: 'Server error' }));
-    throw new Error(err.detail || `Upload failed (${response.status})`);
-  }
-
-  const data = await response.json();
-
-  if (!data.ok) {
-    throw new Error(data.detail || 'Digitization failed');
-  }
-
-  const notes: NoteEvent[] = (data.notes || []).map((n: { pitch: number; start: number; duration: number; velocity: number }) => ({
-    pitch: n.pitch,
-    start: n.start,
-    duration: n.duration,
-    velocity: n.velocity,
-  }));
-
-  return {
-    notes,
-    tempoBpm: data.tempo_bpm || 120,
-    timeSignature: data.time_signature,
-    summary: data.summary,
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Unified file handler
 // ---------------------------------------------------------------------------
 
@@ -119,11 +70,11 @@ export const SUPPORTED_EXTENSIONS = [
 
 /**
  * Parse any supported music file.
- * Supported formats are parsed client-side.
+ * Supported formats are parsed client-side in this build.
  */
 export async function parseFile(
   file: File,
-): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string; source: 'client' | 'server'; summary?: { key: string } }> {
+): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string; source: 'client' }> {
   const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
 
   if (MIDI_EXTENSIONS.has(ext)) {

@@ -55,7 +55,6 @@ function App() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [sourceType, setSourceType] = useState<string>('vocal');
 
   const [notes, setNotes] = useState<NoteEvent[]>([]);
   const [arrangement, setArrangement] = useState<Arrangement | null>(null);
@@ -458,8 +457,6 @@ function App() {
             isProcessing={isUploading}
             error={uploadError}
             supportedFormats={SUPPORTED_EXTENSIONS}
-            sourceType={sourceType}
-            onSourceTypeChange={setSourceType}
           />
 
           <div className="upload-step__alt">
