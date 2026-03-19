@@ -1,4 +1,5 @@
 import type { NoteEvent } from '../types/music.ts';
+import { formatTimeSignature } from './time-signature.ts';
 
 const DEFAULT_TEMPO_BPM = 120;
 const DEFAULT_VELOCITY = 80;
@@ -132,7 +133,28 @@ function parseDivisions(attributes: Element): number | null {
   return divisions;
 }
 
-export async function parseMusicXmlFile(file: File): Promise<{ notes: NoteEvent[]; tempoBpm: number }> {
+function readTimeSignature(xml: ParentNode): string | undefined {
+  const timeNode = xml.querySelector('part > measure > attributes > time');
+  if (!timeNode) {
+    return undefined;
+  }
+
+  const beatsText = getFirstElementText(timeNode, 'beats');
+  const beatTypeText = getFirstElementText(timeNode, 'beat-type');
+  if (!beatsText || !beatTypeText) {
+    return undefined;
+  }
+
+  const beatsPerBar = Number.parseInt(beatsText, 10);
+  const beatUnit = Number.parseInt(beatTypeText, 10);
+  if (!Number.isFinite(beatsPerBar) || !Number.isFinite(beatUnit) || beatsPerBar <= 0 || beatUnit <= 0) {
+    return undefined;
+  }
+
+  return formatTimeSignature(beatsPerBar, beatUnit);
+}
+
+export async function parseMusicXmlFile(file: File): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string }> {
   const extension = file.name.split('.').pop()?.toLowerCase();
   if (extension === 'mxl') {
     throw new Error('MXL (compressed MusicXML) not yet supported, please use .xml or .musicxml');
@@ -147,6 +169,7 @@ export async function parseMusicXmlFile(file: File): Promise<{ notes: NoteEvent[
 
   const firstTempo = readTempoFromSound(xml);
   const tempoBpm = firstTempo ?? DEFAULT_TEMPO_BPM;
+  const timeSignature = readTimeSignature(xml);
 
   const notes: NoteEvent[] = [];
 
@@ -250,5 +273,6 @@ export async function parseMusicXmlFile(file: File): Promise<{ notes: NoteEvent[
   return {
     notes,
     tempoBpm,
+    timeSignature,
   };
 }

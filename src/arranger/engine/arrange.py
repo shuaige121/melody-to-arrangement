@@ -12,7 +12,7 @@ import mido
 from arranger.analysis.melody import analyze_melody
 from arranger.engine.llm import get_strategy
 from arranger.midi.builder import build_midi
-from arranger.midi.parser import parse_midi
+from arranger.midi.parser import extract_melody_track, parse_midi
 from arranger.models.arrangement import Arrangement, Track
 from arranger.models.note import Note
 from arranger.patterns.bass import generate_bass_line
@@ -48,6 +48,16 @@ def _resolve_tempo_bpm(metadata: dict[str, Any], analysis_tempo: int) -> int:
     return max(20, min(300, int(analysis_tempo or 120)))
 
 
+def _tempo_bpm_from_metadata(metadata: dict[str, Any]) -> int | None:
+    microseconds_per_beat = metadata.get("tempo")
+    try:
+        if microseconds_per_beat:
+            return int(round(mido.tempo2bpm(int(microseconds_per_beat))))
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+    return None
+
+
 def _parse_progression_symbols(progression_style: str) -> list[str]:
     symbols = [piece.strip() for piece in (progression_style or "").split("-") if piece.strip()]
     return symbols or ["I", "V", "vi", "IV"]
@@ -74,11 +84,15 @@ def _validate_track_notes(notes: list[Note], analysis: Any, strategy: Any, track
 
     guardrails = None
     if create_guardrails is not None:
+        key_name = getattr(analysis, "key", None)
         try:
-            guardrails = create_guardrails(analysis=analysis, strategy=strategy, track_name=track_name)
+            if isinstance(key_name, str) and key_name:
+                guardrails = create_guardrails(key=key_name, track_name=track_name)
+            else:
+                guardrails = create_guardrails(key_name, track_name)
         except TypeError:
             try:
-                guardrails = create_guardrails(analysis, strategy, track_name)
+                guardrails = create_guardrails(key_name, track_name)
             except Exception:
                 guardrails = None
         except Exception:
@@ -126,17 +140,27 @@ def arrange_melody(
       8) Write output MIDI
     """
 
-    notes, metadata = parse_midi(input_path)
-    if not notes:
+    all_notes, metadata = parse_midi(input_path)
+    if not all_notes:
         raise ValueError(f"No notes found in input MIDI: {input_path}")
 
-    analysis = analyze_melody(notes)
+    melody_notes = extract_melody_track(input_path) or all_notes
+
+    ppq = max(1, int(metadata.get("ppq", DEFAULT_PPQ)))
+    metadata_time_sig = _normalize_time_sig(metadata.get("time_sig", DEFAULT_TIME_SIG))
+    metadata_tempo_bpm = _tempo_bpm_from_metadata(metadata)
+
+    analysis = analyze_melody(
+        melody_notes,
+        tempo_bpm=metadata_tempo_bpm,
+        time_sig=metadata_time_sig,
+        ppq=ppq,
+    )
     strategy = get_strategy(analysis=analysis, style=style, mood=mood)
 
     progression_symbols = _parse_progression_symbols(strategy.progression_style)
     chords = resolve_progression(progression_symbols, key=analysis.key)
 
-    ppq = max(1, int(metadata.get("ppq", DEFAULT_PPQ)))
     total_bars = max(1, int(getattr(analysis, "total_bars", 1) or 1))
 
     drum_pattern = _resolve_drum_pattern(strategy.drum_style)
@@ -150,12 +174,13 @@ def arrange_melody(
 
     arrangement = Arrangement(
         tracks=[
+            Track(name="Lead Melody", channel=0, program=80, notes=melody_notes),
             Track(name="Drums", channel=9, program=0, notes=drum_notes),
             Track(name="Bass", channel=1, program=34, notes=bass_notes),
-            Track(name="Piano", channel=0, program=0, notes=piano_notes),
+            Track(name="Piano", channel=2, program=0, notes=piano_notes),
         ],
         tempo=_resolve_tempo_bpm(metadata=metadata, analysis_tempo=analysis.tempo),
-        time_sig=_normalize_time_sig(metadata.get("time_sig", getattr(analysis, "time_sig", DEFAULT_TIME_SIG))),
+        time_sig=metadata_time_sig,
         ppq=ppq,
         total_bars=total_bars,
         metadata={
@@ -170,4 +195,3 @@ def arrange_melody(
 
 
 __all__ = ["arrange_melody"]
-

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent, UIEvent } from 'react';
 import type { NoteEvent } from '../types/music.ts';
+import { beatsFromSeconds, secondsFromBeats } from '../engine/time-signature.ts';
 import './PianoRoll.css';
 
 interface PianoRollProps {
@@ -8,6 +9,7 @@ interface PianoRollProps {
   onNotesChange: (notes: NoteEvent[]) => void;
   bars: number;
   beatsPerBar: number;
+  beatUnit: number;
   tempoBpm: number;
   trackName?: string;
   readOnly?: boolean;
@@ -84,11 +86,13 @@ export default function PianoRoll({
   onNotesChange,
   bars,
   beatsPerBar,
+  beatUnit,
   tempoBpm,
   trackName,
   readOnly = false,
 }: PianoRollProps) {
   const [mode, setMode] = useState<PianoRollMode>('draw');
+  const [primaryMode, setPrimaryModeState] = useState<'draw' | 'select'>('draw');
   const [selectedNoteIndices, setSelectedNoteIndices] = useState<number[]>([]);
   const [drawDrag, setDrawDrag] = useState<DrawDragState | null>(null);
   const [moveDrag, setMoveDrag] = useState<MoveDragState | null>(null);
@@ -102,7 +106,6 @@ export default function PianoRoll({
   const nonMoveModeRef = useRef<'draw' | 'select'>('draw');
 
   const totalBeats = bars * beatsPerBar;
-  const secondsPerBeat = tempoBpm > 0 ? 60 / tempoBpm : 0.5;
 
   const pitchRows = useMemo(() => {
     const rows: number[] = [];
@@ -119,8 +122,8 @@ export default function PianoRoll({
     notes.forEach((note, index) => {
       if (note.pitch < MIN_PITCH || note.pitch > MAX_PITCH) return;
 
-      const rawStartBeat = note.start / secondsPerBeat;
-      const rawEndBeat = (note.start + note.duration) / secondsPerBeat;
+      const rawStartBeat = beatsFromSeconds(note.start, tempoBpm, beatUnit);
+      const rawEndBeat = beatsFromSeconds(note.start + note.duration, tempoBpm, beatUnit);
       const startBeat = clamp(Math.floor(rawStartBeat), 0, totalBeats - 1);
       const endBeat = clamp(Math.ceil(rawEndBeat), startBeat + 1, totalBeats);
 
@@ -135,7 +138,7 @@ export default function PianoRoll({
     });
 
     return mapped;
-  }, [notes, secondsPerBeat, totalBeats]);
+  }, [notes, tempoBpm, beatUnit, totalBeats]);
 
   const activeCellMap = useMemo(() => {
     const map = new Map<string, GridNote>();
@@ -147,7 +150,20 @@ export default function PianoRoll({
     return map;
   }, [gridNotes]);
 
-  const selectedNoteSet = useMemo(() => new Set(selectedNoteIndices), [selectedNoteIndices]);
+  const visibleSelectedNoteIndices = useMemo(
+    () => selectedNoteIndices.filter((idx) => idx >= 0 && idx < notes.length),
+    [selectedNoteIndices, notes.length]
+  );
+
+  const selectedNoteSet = useMemo(() => new Set(visibleSelectedNoteIndices), [visibleSelectedNoteIndices]);
+
+  const activeVelocityEditor = useMemo(() => {
+    if (!velocityEditor) return null;
+    if (velocityEditor.noteIndex < 0 || velocityEditor.noteIndex >= notes.length) {
+      return null;
+    }
+    return velocityEditor;
+  }, [velocityEditor, notes.length]);
 
   const ghostPreview = useMemo(() => {
     if (!moveDrag || !moveDrag.didMove) return null;
@@ -179,18 +195,13 @@ export default function PianoRoll({
   }, [clearPendingRemove, notes, onNotesChange]);
 
   const commitVelocityEditor = useCallback(() => {
-    if (!velocityEditor || readOnly) {
+    if (!activeVelocityEditor || readOnly) {
       setVelocityEditor(null);
       return;
     }
 
-    const noteIndex = velocityEditor.noteIndex;
-    if (noteIndex < 0 || noteIndex >= notes.length) {
-      setVelocityEditor(null);
-      return;
-    }
-
-    const parsed = Number.parseInt(velocityEditor.value, 10);
+    const noteIndex = activeVelocityEditor.noteIndex;
+    const parsed = Number.parseInt(activeVelocityEditor.value, 10);
     if (Number.isNaN(parsed)) {
       setVelocityEditor(null);
       return;
@@ -205,7 +216,7 @@ export default function PianoRoll({
     }
 
     setVelocityEditor(null);
-  }, [velocityEditor, readOnly, notes, onNotesChange]);
+  }, [activeVelocityEditor, readOnly, notes, onNotesChange]);
 
   const commitDrawDrag = useCallback(() => {
     if (!drawDrag || readOnly) {
@@ -219,15 +230,15 @@ export default function PianoRoll({
 
     const newNote: NoteEvent = {
       pitch: drawDrag.pitch,
-      start: startBeat * secondsPerBeat,
-      duration: durationBeats * secondsPerBeat,
+      start: secondsFromBeats(startBeat, tempoBpm, beatUnit),
+      duration: secondsFromBeats(durationBeats, tempoBpm, beatUnit),
       velocity: 100,
     };
 
     onNotesChange([...notes, newNote]);
     setSelectedNoteIndices([]);
     setDrawDrag(null);
-  }, [drawDrag, readOnly, secondsPerBeat, notes, onNotesChange]);
+  }, [drawDrag, readOnly, tempoBpm, beatUnit, notes, onNotesChange]);
 
   const commitMoveDrag = useCallback(() => {
     if (!moveDrag || readOnly) {
@@ -244,8 +255,8 @@ export default function PianoRoll({
         return {
           ...note,
           pitch: moveDrag.targetPitch,
-          start: moveDrag.targetStartBeat * secondsPerBeat,
-          duration: moveDrag.durationBeats * secondsPerBeat,
+          start: secondsFromBeats(moveDrag.targetStartBeat, tempoBpm, beatUnit),
+          duration: secondsFromBeats(moveDrag.durationBeats, tempoBpm, beatUnit),
         };
       });
       onNotesChange(nextNotes);
@@ -257,7 +268,7 @@ export default function PianoRoll({
     if (mode === 'move') {
       setMode(nonMoveModeRef.current);
     }
-  }, [moveDrag, readOnly, mode, notes, onNotesChange, scheduleRemoveNote, secondsPerBeat]);
+  }, [moveDrag, readOnly, mode, tempoBpm, beatUnit, notes, onNotesChange, scheduleRemoveNote]);
 
   const commitResizeDrag = useCallback(() => {
     if (!resizeDrag || readOnly) {
@@ -281,14 +292,14 @@ export default function PianoRoll({
     if (nextDurationBeats !== resizeDrag.originalDurationBeats) {
       const nextNotes = notes.map((note, idx) => (
         idx === noteIndex
-          ? { ...note, duration: nextDurationBeats * secondsPerBeat }
+          ? { ...note, duration: secondsFromBeats(nextDurationBeats, tempoBpm, beatUnit) }
           : note
       ));
       onNotesChange(nextNotes);
     }
 
     setResizeDrag(null);
-  }, [resizeDrag, readOnly, notes, onNotesChange, secondsPerBeat, totalBeats]);
+  }, [resizeDrag, readOnly, tempoBpm, beatUnit, notes, onNotesChange, totalBeats]);
 
   const finalizePointerInteraction = useCallback(() => {
     if (resizeDrag) {
@@ -306,13 +317,13 @@ export default function PianoRoll({
   }, [resizeDrag, moveDrag, drawDrag, commitResizeDrag, commitMoveDrag, commitDrawDrag]);
 
   const handleDeleteSelected = useCallback(() => {
-    if (readOnly || selectedNoteIndices.length === 0) return;
+    if (readOnly || visibleSelectedNoteIndices.length === 0) return;
 
-    const selected = new Set(selectedNoteIndices);
+    const selected = new Set(visibleSelectedNoteIndices);
     const nextNotes = notes.filter((_, idx) => !selected.has(idx));
     onNotesChange(nextNotes);
     setSelectedNoteIndices([]);
-  }, [readOnly, selectedNoteIndices, notes, onNotesChange]);
+  }, [readOnly, visibleSelectedNoteIndices, notes, onNotesChange]);
 
   const handleGridScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
     setHeaderScrollLeft(event.currentTarget.scrollLeft);
@@ -349,6 +360,7 @@ export default function PianoRoll({
     if (cellNote) {
       const startedInMode: 'draw' | 'select' = mode === 'select' ? 'select' : 'draw';
       nonMoveModeRef.current = startedInMode;
+      setPrimaryModeState(startedInMode);
 
       if (mode === 'select') {
         setSelectedNoteIndices((prev) => {
@@ -492,6 +504,7 @@ export default function PianoRoll({
 
   const setPrimaryMode = useCallback((nextMode: 'draw' | 'select') => {
     nonMoveModeRef.current = nextMode;
+    setPrimaryModeState(nextMode);
     setMode(nextMode);
   }, []);
 
@@ -502,17 +515,6 @@ export default function PianoRoll({
     setSelectedNoteIndices([]);
     setVelocityEditor(null);
   }, [readOnly, clearPendingRemove, onNotesChange]);
-
-  useEffect(() => {
-    setSelectedNoteIndices((prev) => prev.filter((idx) => idx >= 0 && idx < notes.length));
-  }, [notes.length]);
-
-  useEffect(() => {
-    if (!velocityEditor) return;
-    if (velocityEditor.noteIndex < 0 || velocityEditor.noteIndex >= notes.length) {
-      setVelocityEditor(null);
-    }
-  }, [velocityEditor, notes.length]);
 
   useEffect(() => {
     const handleWindowMouseUp = () => {
@@ -535,7 +537,7 @@ export default function PianoRoll({
         return;
       }
 
-      if (selectedNoteIndices.length > 0) {
+      if (visibleSelectedNoteIndices.length > 0) {
         event.preventDefault();
         handleDeleteSelected();
       }
@@ -545,7 +547,7 @@ export default function PianoRoll({
     return () => {
       window.removeEventListener('keydown', handleWindowKeyDown);
     };
-  }, [readOnly, selectedNoteIndices.length, handleDeleteSelected]);
+  }, [readOnly, visibleSelectedNoteIndices.length, handleDeleteSelected]);
 
   useEffect(() => {
     return () => {
@@ -553,7 +555,7 @@ export default function PianoRoll({
     };
   }, [clearPendingRemove]);
 
-  const toolbarMode = mode === 'move' ? nonMoveModeRef.current : mode;
+  const toolbarMode = mode === 'move' ? primaryMode : mode;
 
   return (
     <div className="piano-roll" ref={rootRef}>
@@ -685,12 +687,12 @@ export default function PianoRoll({
         </div>
       </div>
 
-      {velocityEditor ? (
+      {activeVelocityEditor ? (
         <div
           style={{
             position: 'absolute',
-            left: velocityEditor.x,
-            top: velocityEditor.y,
+            left: activeVelocityEditor.x,
+            top: activeVelocityEditor.y,
             zIndex: 20,
             padding: '4px',
             borderRadius: '4px',
@@ -702,7 +704,7 @@ export default function PianoRoll({
             type="number"
             min={0}
             max={127}
-            value={velocityEditor.value}
+            value={activeVelocityEditor.value}
             onChange={(event) => {
               setVelocityEditor((prev) => {
                 if (!prev) return null;

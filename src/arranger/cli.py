@@ -1,4 +1,5 @@
 import click
+import mido
 import os
 
 
@@ -66,10 +67,21 @@ def analyze(input_path):
     from arranger.analysis.melody import analyze_melody
 
     notes, meta = parse_midi(input_path)
+    tempo_bpm: int | None = None
+    try:
+        tempo_bpm = int(round(mido.tempo2bpm(int(meta.get("tempo")))))
+    except (TypeError, ValueError, ZeroDivisionError):
+        tempo_bpm = None
+
     click.echo(f"📄 File: {input_path}")
     click.echo(f"   Notes: {len(notes)} | PPQ: {meta.get('ppq', 480)}")
 
-    result = analyze_melody(notes)
+    result = analyze_melody(
+        notes,
+        tempo_bpm=tempo_bpm,
+        time_sig=meta.get("time_sig"),
+        ppq=meta.get("ppq", 480),
+    )
     click.echo(f"🎼 Key: {result.key}")
     click.echo(f"   Tempo: {result.tempo} BPM")
     click.echo(f"   Time Sig: {result.time_sig[0]}/{result.time_sig[1]}")

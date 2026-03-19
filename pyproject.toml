@@ -21,7 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 llm = ["anthropic>=0.40"]
 audio = []  # basic-pitch needs tensorflow; install manually if needed
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.28"]
 
 [project.scripts]
 arranger = "arranger.cli:main"

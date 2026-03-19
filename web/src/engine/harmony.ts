@@ -9,6 +9,7 @@
 
 import type { NoteEvent, KeyEstimate, Chord, HarmonyCandidate } from '../types/music';
 import { resolveRomanToChord } from './theory';
+import { beatUnitSeconds, secondsPerBar } from './time-signature';
 
 // ---------------------------------------------------------------------------
 // Progression Template
@@ -100,9 +101,10 @@ function scoreProgression(
   notesGrouped: NoteEvent[][],
   beatsPerBar: number,
   tempoBpm: number,
+  beatUnit: number,
 ): [number, number, number] {
-  const beatSeconds = 60.0 / Math.max(1e-6, tempoBpm);
-  const barSeconds = beatSeconds * beatsPerBar;
+  const beatSeconds = beatUnitSeconds(tempoBpm, beatUnit);
+  const barSeconds = secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
 
   let totalNotes = 0;
   let chordToneHits = 0;
@@ -164,6 +166,7 @@ export function generateHarmony(
   style: string,
   beatsPerBar = 4,
   tempoBpm = 120,
+  beatUnit = 4,
 ): HarmonyCandidate[] {
   const templateList = STYLE_TEMPLATES[style];
   if (!templateList) {
@@ -174,8 +177,7 @@ export function generateHarmony(
     return [];
   }
 
-  const beatSeconds = 60.0 / Math.max(1e-6, tempoBpm);
-  const barSeconds = beatSeconds * beatsPerBar;
+  const barSeconds = secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
   const grouped = notesByBar(notes, barSeconds, bars);
 
   const candidates: HarmonyCandidate[] = [];
@@ -189,6 +191,7 @@ export function generateHarmony(
       grouped,
       beatsPerBar,
       tempoBpm,
+      beatUnit,
     );
 
     candidates.push({

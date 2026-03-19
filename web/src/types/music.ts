@@ -49,6 +49,8 @@ export interface ArrangementTrack {
 export interface Arrangement {
   tracks: ArrangementTrack[];
   readonly tempoBpm: number;
+  readonly beatsPerBar: number;
+  readonly beatUnit: number;
   bars: number;
   style: 'pop' | 'modal' | 'jazz';
   complexity: 'basic' | 'rich';

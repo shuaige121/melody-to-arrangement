@@ -11,6 +11,7 @@
 import * as Tone from 'tone';
 import type { Arrangement, NoteEvent } from '../types/music.ts';
 import { midiToNoteName } from './gm-instruments.ts';
+import { secondsPerBar } from './time-signature.ts';
 
 /** Transport instance type (not directly exported by Tone.js). */
 type ToneTransport = ReturnType<typeof Tone.getTransport>;
@@ -19,9 +20,9 @@ type ToneTransport = ReturnType<typeof Tone.getTransport>;
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Seconds per bar at the given BPM (assumes 4/4). */
-function barSeconds(tempoBpm: number, beatsPerBar = 4): number {
-  return (60.0 / Math.max(1e-6, tempoBpm)) * beatsPerBar;
+/** Seconds per bar at the current time signature. */
+function barSeconds(tempoBpm: number, beatsPerBar = 4, beatUnit = 4): number {
+  return secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
 }
 
 /**
@@ -173,11 +174,13 @@ export class PlaybackEngine {
     this.disposeInternals();
 
     this.loadedArrangement = arrangement;
-    this.totalDuration = arrangement.bars * barSeconds(arrangement.tempoBpm);
+    this.totalDuration = arrangement.bars * barSeconds(arrangement.tempoBpm, arrangement.beatsPerBar, arrangement.beatUnit);
 
     const transport = Tone.getTransport();
     transport.bpm.value = arrangement.tempoBpm;
-    transport.timeSignature = 4;
+    transport.timeSignature = arrangement.beatUnit === 4
+      ? arrangement.beatsPerBar
+      : [arrangement.beatsPerBar, arrangement.beatUnit];
 
     for (const track of arrangement.tracks) {
       const role = inferRole(track.name, track.channel);
@@ -379,7 +382,11 @@ export class PlaybackEngine {
     const transport = Tone.getTransport();
     transport.bpm.value = Math.max(20, Math.min(300, bpm));
     if (this.loadedArrangement) {
-      this.totalDuration = this.loadedArrangement.bars * barSeconds(bpm);
+      this.totalDuration = this.loadedArrangement.bars * barSeconds(
+        bpm,
+        this.loadedArrangement.beatsPerBar,
+        this.loadedArrangement.beatUnit,
+      );
     }
   }
 

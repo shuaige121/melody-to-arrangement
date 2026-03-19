@@ -156,18 +156,6 @@ export default function MidiPlayer() {
   const loadedMidiRef = useRef<Midi | null>(null);
 
   // -------------------------------------------------------------------
-  // Cleanup on unmount
-  // -------------------------------------------------------------------
-
-  useEffect(() => {
-    return () => {
-      disposeAudio();
-      cancelAnimationFrame(animFrameRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // -------------------------------------------------------------------
   // Audio resource management
   // -------------------------------------------------------------------
 
@@ -201,6 +189,17 @@ export default function MidiPlayer() {
 
     loadedMidiRef.current = null;
   }
+
+  // -------------------------------------------------------------------
+  // Cleanup on unmount
+  // -------------------------------------------------------------------
+
+  useEffect(() => {
+    return () => {
+      disposeAudio();
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
 
   // -------------------------------------------------------------------
   // Solo/mute logic

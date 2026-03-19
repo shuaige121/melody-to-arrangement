@@ -15,6 +15,7 @@ import {
   pitchClassToName,
   rotate,
 } from './theory';
+import { beatUnitSeconds, secondsPerBar } from './time-signature';
 
 // ---------------------------------------------------------------------------
 // Phrase info returned by detectPhrases
@@ -113,11 +114,11 @@ export function inferBarCount(
   notes: NoteEvent[],
   tempoBpm: number,
   beatsPerBar: number,
+  beatUnit = 4,
 ): number {
   if (notes.length === 0) return 1;
 
-  const beatSeconds = 60.0 / Math.max(1e-6, tempoBpm);
-  const barSeconds = beatSeconds * beatsPerBar;
+  const barDurationSeconds = secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
 
   let maxEnd = 0;
   for (const note of notes) {
@@ -125,7 +126,7 @@ export function inferBarCount(
     if (end > maxEnd) maxEnd = end;
   }
 
-  return Math.max(1, Math.ceil(maxEnd / barSeconds));
+  return Math.max(1, Math.ceil(maxEnd / barDurationSeconds));
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +215,7 @@ export function detectPhrasesInfo(notes: NoteEvent[], beatDuration: number): Phr
  * Compute summary statistics for a melody: pitch range, median pitch,
  * average note duration, and detected phrases.
  */
-export function melodySummary(notes: NoteEvent[], tempoBpm: number): MelodySummary {
+export function melodySummary(notes: NoteEvent[], tempoBpm: number, beatUnit = 4): MelodySummary {
   if (notes.length === 0) {
     return {
       noteCount: 0,
@@ -228,7 +229,7 @@ export function melodySummary(notes: NoteEvent[], tempoBpm: number): MelodySumma
   }
 
   const sorted = [...notes].sort((a, b) => a.start - b.start || a.pitch - b.pitch);
-  const beatSeconds = 60.0 / Math.max(1e-6, tempoBpm);
+  const beatSeconds = beatUnitSeconds(tempoBpm, beatUnit);
 
   const pitches = sorted.map((n) => n.pitch);
   const rangeMin = Math.min(...pitches);

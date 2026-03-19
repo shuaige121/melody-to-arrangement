@@ -48,6 +48,24 @@ def _normalize_time_signature(raw: Any) -> tuple[int, int]:
     return 4, 4
 
 
+def _normalize_ppq(ppq: Any) -> int:
+    try:
+        value = int(ppq)
+    except (TypeError, ValueError):
+        return _DEFAULT_PPQ
+    return max(1, value)
+
+
+def _normalize_tempo_bpm(raw: Any) -> int | None:
+    try:
+        tempo_value = int(round(float(raw)))
+    except (TypeError, ValueError):
+        return None
+    if 20 <= tempo_value <= 300:
+        return tempo_value
+    return None
+
+
 def _resolve_time_signature(notes: list[Note]) -> tuple[int, int]:
     """
     默认 4/4，允许从 note 元信息覆盖。
@@ -233,7 +251,12 @@ def _coerce_analysis_result(payload: dict[str, Any]) -> AnalysisResult:
         return AnalysisResult(**compact)
 
 
-def analyze_melody(notes: list[Note]) -> AnalysisResult:
+def analyze_melody(
+    notes: list[Note],
+    tempo_bpm: int | None = None,
+    time_sig: tuple[int, int] | list[int] | str | None = None,
+    ppq: int = _DEFAULT_PPQ,
+) -> AnalysisResult:
     """
     分析主旋律并输出结构化结果（硬约束层）。
     Analyze melody and return structured analysis result (hard-constraint layer).
@@ -244,11 +267,13 @@ def analyze_melody(notes: list[Note]) -> AnalysisResult:
     Returns:
         AnalysisResult: 包含 key/tempo/time signature/range/density/sections 等信息。
     """
-    time_sig = _resolve_time_signature(notes)
-    notes_per_bar = _density_value(notes, ppq=_DEFAULT_PPQ, time_sig=time_sig)
-    total_bars = int(np.ceil(_bars_span(notes, ppq=_DEFAULT_PPQ, time_sig=time_sig)))
+    resolved_time_sig = _normalize_time_signature(time_sig) if time_sig is not None else _resolve_time_signature(notes)
+    resolved_ppq = _normalize_ppq(ppq)
+
+    notes_per_bar = _density_value(notes, ppq=resolved_ppq, time_sig=resolved_time_sig)
+    total_bars = int(np.ceil(_bars_span(notes, ppq=resolved_ppq, time_sig=resolved_time_sig)))
     key_name = _detect_key(notes)
-    tempo = _estimate_tempo(notes, notes_per_bar)
+    tempo = _normalize_tempo_bpm(tempo_bpm) or _estimate_tempo(notes, notes_per_bar)
 
     if notes:
         pitches = np.array([int(_safe_attr(n, "note_number", 60)) for n in notes], dtype=int)
@@ -256,15 +281,15 @@ def analyze_melody(notes: list[Note]) -> AnalysisResult:
     else:
         melody_range = (0, 0)
 
-    sections = analyze_structure(notes, tempo=tempo, time_sig=time_sig, ppq=_DEFAULT_PPQ)
-    strong_beats = identify_strong_beats(notes, ppq=_DEFAULT_PPQ, beats_per_bar=time_sig[0])
+    sections = analyze_structure(notes, tempo=tempo, time_sig=resolved_time_sig, ppq=resolved_ppq)
+    strong_beats = identify_strong_beats(notes, ppq=resolved_ppq, beats_per_bar=resolved_time_sig[0])
 
     payload: dict[str, Any] = {
         "key": key_name,
         "tempo": tempo,
-        "time_sig": time_sig,
+        "time_sig": resolved_time_sig,
         "total_bars": max(total_bars, 1),
-        "time_signature": f"{time_sig[0]}/{time_sig[1]}",
+        "time_signature": f"{resolved_time_sig[0]}/{resolved_time_sig[1]}",
         "melody_range": melody_range,
         "melody_density": _density_label(notes_per_bar),
         "note_density": float(notes_per_bar),

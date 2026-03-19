@@ -15,7 +15,7 @@ import { useI18n } from './i18n.ts';
 import StepWizard from './components/StepWizard.tsx';
 import FileUpload from './components/FileUpload.tsx';
 import AnalysisView from './components/AnalysisView.tsx';
-import type { AnalysisFormState } from './components/AnalysisView.tsx';
+import type { AnalysisFormState, TimeSignature } from './components/AnalysisView.tsx';
 import ArrangeView from './components/ArrangeView.tsx';
 import TrackList from './components/TrackList.tsx';
 import type { TrackState } from './components/TrackList.tsx';
@@ -26,6 +26,7 @@ import PianoRoll from './components/PianoRoll.tsx';
 import ExportView from './components/ExportView.tsx';
 import LanguageSwitcher from './components/LanguageSwitcher.tsx';
 import type { CreativityLevelValue } from './components/CreativityLevel.tsx';
+import { beatUnitSeconds, beatsFromSeconds, parseTimeSignatureString, secondsPerBar } from './engine/time-signature.ts';
 import './App.css';
 
 function createDemoNotes(tempoBpm: number): NoteEvent[] {
@@ -37,6 +38,13 @@ function createDemoNotes(tempoBpm: number): NoteEvent[] {
     duration: secondsPerBeat * 0.9,
     velocity: 100,
   }));
+}
+
+function normalizeAnalysisTimeSignature(timeSignature?: string): TimeSignature {
+  if (timeSignature === '3/4' || timeSignature === '6/8') {
+    return timeSignature;
+  }
+  return '4/4';
 }
 
 function App() {
@@ -84,7 +92,8 @@ function App() {
     phrases: 0,
   });
 
-  const beatsPerBar = analysisState.timeSignature === '3/4' ? 3 : analysisState.timeSignature === '6/8' ? 6 : 4;
+  const { beatsPerBar, beatUnit } = parseTimeSignatureString(analysisState.timeSignature);
+  const playbackBeatUnit = arrangement?.beatUnit ?? beatUnit;
 
   const playbackRef = useRef<PlaybackEngine | null>(null);
   const animFrameRef = useRef<number>(0);
@@ -124,10 +133,9 @@ function App() {
     const engine = playbackRef.current;
     if (!engine) return;
 
-    const secondsPerBeat = 60 / tempo;
     const tick = () => {
       const position = engine.getPosition();
-      setCurrentBeat(position / secondsPerBeat);
+      setCurrentBeat(beatsFromSeconds(position, tempo, playbackBeatUnit));
       if (position >= engine.getDuration() && engine.getDuration() > 0) {
         engine.stop();
         setIsPlaying(false);
@@ -139,7 +147,7 @@ function App() {
 
     animFrameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [isPlaying, tempo]);
+  }, [isPlaying, tempo, playbackBeatUnit]);
 
   useEffect(() => {
     return () => {
@@ -147,34 +155,23 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (currentStep < 3) return;
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLSelectElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-      if (event.code === 'Space') {
-        event.preventDefault();
-        void handlePlay();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentStep]);
-
-  const applyParsedMelody = useCallback((parsedNotes: NoteEvent[], tempoBpm: number, fileName: string | null) => {
+  const applyParsedMelody = useCallback((
+    parsedNotes: NoteEvent[],
+    tempoBpm: number,
+    fileName: string | null,
+    timeSignature?: string,
+  ) => {
     const roundedTempo = Math.max(40, Math.min(240, Math.round(tempoBpm)));
-    const phraseCount = parsedNotes.length > 0 ? detectPhrasesInfo(parsedNotes, 60 / roundedTempo).length : 0;
+    const nextTimeSignature = normalizeAnalysisTimeSignature(timeSignature);
+    const { beatsPerBar: parsedBeatsPerBar, beatUnit: parsedBeatUnit } = parseTimeSignatureString(nextTimeSignature);
+    const phraseCount = parsedNotes.length > 0
+      ? detectPhrasesInfo(parsedNotes, beatUnitSeconds(roundedTempo, parsedBeatUnit)).length
+      : 0;
     const maxNoteEnd = parsedNotes.length > 0
       ? Math.max(...parsedNotes.map((note) => note.start + note.duration))
       : 0;
     const inferredBars = parsedNotes.length > 0
-      ? Math.max(4, Math.ceil(maxNoteEnd / (60 / roundedTempo * 4)))
+      ? Math.max(4, Math.ceil(maxNoteEnd / secondsPerBar(roundedTempo, parsedBeatsPerBar, parsedBeatUnit)))
       : 8;
     const nextBars = Math.min(32, inferredBars);
     const detectedKey = parsedNotes.length > 0 ? estimateKey(parsedNotes) : null;
@@ -193,7 +190,7 @@ function App() {
       key: detectedKey?.tonicName ?? 'C',
       mode: detectedKey?.mode ?? 'major',
       bpm: roundedTempo,
-      timeSignature: '4/4',
+      timeSignature: nextTimeSignature,
       bars: nextBars,
       notes: parsedNotes.length,
       phrases: phraseCount,
@@ -205,18 +202,18 @@ function App() {
     setIsUploading(true);
     setUploadError(null);
     try {
-      const result = await parseFile(file, style);
+      const result = await parseFile(file);
       if (result.notes.length === 0) throw new Error(t('upload.noNotes'));
-      applyParsedMelody(result.notes, result.tempoBpm, file.name);
+      applyParsedMelody(result.notes, result.tempoBpm, file.name, result.timeSignature);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Failed to parse file');
     } finally {
       setIsUploading(false);
     }
-  }, [style, t, applyParsedMelody]);
+  }, [t, applyParsedMelody]);
 
   const handleLoadDemo = useCallback(() => {
-    applyParsedMelody(createDemoNotes(120), 120, t('demo.name'));
+    applyParsedMelody(createDemoNotes(120), 120, t('demo.name'), '4/4');
   }, [t, applyParsedMelody]);
 
   const handleStartManual = useCallback(() => {
@@ -279,6 +276,26 @@ function App() {
     }
   }, [isPlaying, arrangement, getPlaybackEngine, t]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (currentStep < 3) return;
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLSelectElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if (event.code === 'Space') {
+        event.preventDefault();
+        void handlePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, handlePlay]);
+
   const handleStop = useCallback(() => {
     try {
       playbackRef.current?.stop();
@@ -297,7 +314,16 @@ function App() {
     setIsGenerating(true);
     setError(null);
     try {
-      const result = await generateArrangementWithAI(notes, tempo, bars, style, complexity, beatsPerBar);
+      const result = await generateArrangementWithAI(
+        notes,
+        tempo,
+        bars,
+        style,
+        complexity,
+        beatsPerBar,
+        beatUnit,
+        creativityLevel,
+      );
       const nextArrangement = result.arrangement;
 
       for (const track of nextArrangement.tracks) {
@@ -316,7 +342,7 @@ function App() {
     } finally {
       setIsGenerating(false);
     }
-  }, [notes, tempo, bars, style, complexity, beatsPerBar, leadProgram, bassProgram, harmonyProgram, t]);
+  }, [notes, tempo, bars, style, complexity, beatsPerBar, beatUnit, creativityLevel, leadProgram, bassProgram, harmonyProgram, t]);
 
   const handleTempoChange = useCallback((nextTempo: number) => {
     setTempo(nextTempo);
@@ -544,7 +570,7 @@ function App() {
                   </button>
                 </div>
               )}
-              <ArrangementView arrangement={arrangement} currentBeat={currentBeat} beatsPerBar={beatsPerBar} />
+              <ArrangementView arrangement={arrangement} currentBeat={currentBeat} beatsPerBar={arrangement?.beatsPerBar ?? beatsPerBar} />
             </div>
           </div>
 
@@ -567,6 +593,7 @@ function App() {
                 onNotesChange={setNotes}
                 bars={bars}
                 beatsPerBar={beatsPerBar}
+                beatUnit={beatUnit}
                 tempoBpm={tempo}
               />
             )}

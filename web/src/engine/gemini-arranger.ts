@@ -7,28 +7,36 @@
 
 import type { NoteEvent, Arrangement, ArrangementTrack, KeyEstimate } from '../types/music.ts';
 import { estimateKey, inferBarCount, generateHarmony, buildArrangement } from './index.ts';
+import { beatUnitSeconds, secondsPerBar } from './time-signature.ts';
 
 type CreativityLevel = 'conservative' | 'balanced' | 'creative';
 
 interface ImmutableProjectParams {
   readonly tempoBpm: number;
   readonly beatsPerBar: number;
+  readonly beatUnit: number;
   readonly key: KeyEstimate;
 }
 
 function createImmutableProjectParams(
   tempoBpm: number,
   beatsPerBar: number,
+  beatUnit: number,
   key: KeyEstimate,
 ): ImmutableProjectParams {
-  return { tempoBpm, beatsPerBar, key: { ...key } };
+  return { tempoBpm, beatsPerBar, beatUnit, key: { ...key } };
 }
 
 function enforceImmutableArrangement(
   arrangement: Arrangement,
   params: ImmutableProjectParams,
 ): Arrangement {
-  return { ...arrangement, tempoBpm: params.tempoBpm };
+  return {
+    ...arrangement,
+    tempoBpm: params.tempoBpm,
+    beatsPerBar: params.beatsPerBar,
+    beatUnit: params.beatUnit,
+  };
 }
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
@@ -82,10 +90,12 @@ function buildPrompt(
   style: string,
   tempoBpm: number,
   bars: number,
+  beatsPerBar: number,
+  beatUnit: number,
   creativityLevel: CreativityLevel,
 ): string {
-  const secondsPerBeat = 60 / tempoBpm;
-  const totalDuration = bars * 4 * secondsPerBeat;
+  const gridBeatSeconds = beatUnitSeconds(tempoBpm, beatUnit);
+  const totalDuration = bars * secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
   const creativityGuidance = creativityLevel === 'conservative'
     ? 'Use simple, stable accompaniment with clear harmonic support and minimal rhythmic syncopation.'
     : creativityLevel === 'creative'
@@ -105,11 +115,11 @@ function buildPrompt(
 ## Input
 - Key: ${key.tonicName} ${key.mode}
 - Style: ${style}
-- Tempo: ${tempoBpm} BPM
-- Bars: ${bars} (4/4 time)
+- Tempo: ${tempoBpm} BPM (quarter note)
+- Bars: ${bars} (${beatsPerBar}/${beatUnit} time)
 - Creativity level: ${creativityLevel}
 - Total duration: ${totalDuration.toFixed(2)} seconds
-- Seconds per beat: ${secondsPerBeat.toFixed(4)}
+- Seconds per beat-unit: ${gridBeatSeconds.toFixed(4)}
 
 Melody notes (pitch=MIDI 0-127, s=start seconds, d=duration seconds, v=velocity):
 ${JSON.stringify(melodyCompact)}
@@ -129,7 +139,7 @@ Creativity guidance:
 - ${creativityGuidance}
 
 ## Rules
-- DO NOT change tempo, key, or time signature. These are immutable: tempo=${tempoBpm} BPM, key=${key.tonicName} ${key.mode}.
+- DO NOT change tempo, key, or time signature. These are immutable: tempo=${tempoBpm} BPM, key=${key.tonicName} ${key.mode}, time=${beatsPerBar}/${beatUnit}.
 - All note start times must be >= 0 and < ${totalDuration.toFixed(2)}
 - All note durations must be > 0
 - Velocity range: 40-120
@@ -222,18 +232,18 @@ export async function generateArrangementWithAI(
   style: 'pop' | 'modal' | 'jazz',
   complexity: 'basic' | 'rich',
   beatsPerBar: number,
+  beatUnit: number,
   creativityLevel: CreativityLevel = 'balanced',
 ): Promise<{ arrangement: Arrangement; aiGenerated: boolean; key: KeyEstimate; harmony: import('../types/music.ts').HarmonyCandidate | null }> {
-  const immutable = createImmutableProjectParams(tempoBpm, beatsPerBar, estimateKey(melody));
+  const immutable = createImmutableProjectParams(tempoBpm, beatsPerBar, beatUnit, estimateKey(melody));
   const key = immutable.key;
-  const barCount = Math.max(inferBarCount(melody, immutable.tempoBpm, immutable.beatsPerBar) || bars, bars);
-  const secondsPerBeat = 60 / immutable.tempoBpm;
-  const totalDuration = barCount * beatsPerBar * secondsPerBeat;
+  const barCount = Math.max(inferBarCount(melody, immutable.tempoBpm, immutable.beatsPerBar, immutable.beatUnit) || bars, bars);
+  const totalDuration = barCount * secondsPerBar(immutable.tempoBpm, immutable.beatsPerBar, immutable.beatUnit);
 
   // Try Gemini first when key is available.
   if (GEMINI_API_KEY) {
     try {
-      const prompt = buildPrompt(melody, key, style, tempoBpm, barCount, creativityLevel);
+      const prompt = buildPrompt(melody, key, style, tempoBpm, barCount, beatsPerBar, beatUnit, creativityLevel);
       const result = await callGemini(prompt);
 
       const aiTracks = validateAndCleanTracks(result.tracks, totalDuration);
@@ -251,6 +261,8 @@ export async function generateArrangementWithAI(
       const arrangement: Arrangement = {
         tracks: [melodyTrack, ...aiTracks],
         tempoBpm,
+        beatsPerBar,
+        beatUnit,
         bars: barCount,
         style,
         complexity,
@@ -265,13 +277,22 @@ export async function generateArrangementWithAI(
   }
 
   // Fallback to local engine
-  const candidates = generateHarmony(melody, key, barCount, style, beatsPerBar, tempoBpm);
+  const candidates = generateHarmony(melody, key, barCount, style, beatsPerBar, tempoBpm, beatUnit);
   const topCandidate = candidates.length > 0 ? candidates[0] : null;
 
   if (!topCandidate) {
     throw new Error('No harmony candidates found');
   }
 
-  const arrangement = buildArrangement(melody, topCandidate.bars, immutable.tempoBpm, barCount, style, complexity);
+  const arrangement = buildArrangement(
+    melody,
+    topCandidate.bars,
+    immutable.tempoBpm,
+    barCount,
+    style,
+    complexity,
+    immutable.beatsPerBar,
+    immutable.beatUnit,
+  );
   return { arrangement: enforceImmutableArrangement(arrangement, immutable), aiGenerated: false, key: immutable.key, harmony: topCandidate };
 }

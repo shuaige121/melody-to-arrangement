@@ -11,6 +11,7 @@ import { Midi } from '@tonejs/midi';
 import type { NoteEvent } from '../types/music.ts';
 import { parseMusicXmlFile } from './musicxml-parser.ts';
 import { parseAudioFile } from './audio-parser.ts';
+import { formatTimeSignature } from './time-signature.ts';
 
 // ---------------------------------------------------------------------------
 // MIDI client-side parsing
@@ -20,13 +21,17 @@ import { parseAudioFile } from './audio-parser.ts';
  * Parse a MIDI file (.mid/.midi) in the browser and extract notes.
  * Returns { notes, tempoBpm } or throws on error.
  */
-export async function parseMidiFile(file: File): Promise<{ notes: NoteEvent[]; tempoBpm: number }> {
+export async function parseMidiFile(file: File): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string }> {
   const buffer = await file.arrayBuffer();
   const midi = new Midi(new Uint8Array(buffer));
 
   const tempoBpm = midi.header.tempos.length > 0
     ? midi.header.tempos[0].bpm
     : 120;
+  const rawTimeSignature = midi.header.timeSignatures[0]?.timeSignature;
+  const timeSignature = Array.isArray(rawTimeSignature) && rawTimeSignature.length === 2
+    ? formatTimeSignature(rawTimeSignature[0], rawTimeSignature[1])
+    : undefined;
 
   const notes: NoteEvent[] = [];
 
@@ -44,7 +49,7 @@ export async function parseMidiFile(file: File): Promise<{ notes: NoteEvent[]; t
   // Sort by start time
   notes.sort((a, b) => a.start - b.start || a.pitch - b.pitch);
 
-  return { notes, tempoBpm };
+  return { notes, tempoBpm, timeSignature };
 }
 
 // ---------------------------------------------------------------------------
@@ -60,7 +65,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8765';
 export async function uploadFileToBackend(
   file: File,
   style = 'pop',
-): Promise<{ notes: NoteEvent[]; tempoBpm: number; summary?: { key: string } }> {
+): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string; summary?: { key: string } }> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('style', style);
@@ -91,6 +96,7 @@ export async function uploadFileToBackend(
   return {
     notes,
     tempoBpm: data.tempo_bpm || 120,
+    timeSignature: data.time_signature,
     summary: data.summary,
   };
 }
@@ -117,8 +123,7 @@ export const SUPPORTED_EXTENSIONS = [
  */
 export async function parseFile(
   file: File,
-  _style = 'pop',
-): Promise<{ notes: NoteEvent[]; tempoBpm: number; source: 'client' | 'server'; summary?: { key: string } }> {
+): Promise<{ notes: NoteEvent[]; tempoBpm: number; timeSignature?: string; source: 'client' | 'server'; summary?: { key: string } }> {
   const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
 
   if (MIDI_EXTENSIONS.has(ext)) {

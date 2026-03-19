@@ -9,6 +9,7 @@
 import { Midi } from '@tonejs/midi';
 import type { Arrangement, ArrangementTrack, Chord, NoteEvent } from '../types/music.ts';
 import { getGMInstrument } from './gm-instruments.ts';
+import { beatUnitSeconds, secondsPerBar } from './time-signature.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -20,13 +21,25 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** Seconds per beat at the given BPM. */
-function beatSeconds(tempoBpm: number): number {
-  return 60.0 / Math.max(1e-6, tempoBpm);
+function beatSeconds(tempoBpm: number, beatUnit = 4): number {
+  return beatUnitSeconds(tempoBpm, beatUnit);
 }
 
-/** Seconds per bar (assumes 4/4 time). */
-function barSeconds(tempoBpm: number, beatsPerBar = 4): number {
-  return beatSeconds(tempoBpm) * beatsPerBar;
+/** Seconds per bar at the current time signature. */
+function barSeconds(tempoBpm: number, beatsPerBar = 4, beatUnit = 4): number {
+  return secondsPerBar(tempoBpm, beatsPerBar, beatUnit);
+}
+
+function primaryBeatIndices(beatsPerBar: number): number[] {
+  if (beatsPerBar >= 6) return [0, Math.floor(beatsPerBar / 2)];
+  if (beatsPerBar >= 4) return [0, 2];
+  return [0];
+}
+
+function backbeatIndices(beatsPerBar: number): number[] {
+  if (beatsPerBar >= 6) return [Math.floor(beatsPerBar / 2)];
+  if (beatsPerBar === 3) return [1];
+  return [1, 3].filter((beat) => beat < beatsPerBar);
 }
 
 // ---------------------------------------------------------------------------
@@ -45,11 +58,13 @@ export function generateBassLine(
   tempoBpm: number,
   bars: number,
   style: string,
+  beatsPerBar = 4,
+  beatUnit = 4,
 ): NoteEvent[] {
-  const beatsPerBar = 4;
-  const beat = beatSeconds(tempoBpm);
+  const beat = beatSeconds(tempoBpm, beatUnit);
   const notes: NoteEvent[] = [];
   const base = 36; // C2
+  const strongBeats = new Set(primaryBeatIndices(beatsPerBar));
 
   for (let barIdx = 0; barIdx < bars; barIdx++) {
     const chord = chords[barIdx % chords.length];
@@ -62,22 +77,19 @@ export function generateBassLine(
       let duration: number;
 
       if (style === 'jazz') {
-        // Walking bass: root on 1, fifth on 2 and 4, chromatic approach on 3
-        if (b === 1 || b === 3) {
+        if (beatsPerBar >= 4 && (b === 1 || b === beatsPerBar - 1)) {
           pitch = rootPitch + 7;
-        } else if (b === 2) {
+        } else if (beatsPerBar >= 3 && b === Math.floor(beatsPerBar / 2)) {
           pitch = rootPitch + 5;
         }
         duration = beat * 0.85;
       } else if (style === 'modal') {
-        // Groove-locked: root on 1 and 3, with long sustain
-        if (b === 1 || b === 3) {
-          continue; // Skip off-beats for sparser feel
+        if (!strongBeats.has(b)) {
+          continue;
         }
         pitch = rootPitch;
         duration = beat * 1.8;
       } else {
-        // Pop: root on each beat, approach tone on beat 4
         if (b === beatsPerBar - 1) {
           pitch = rootPitch + 2;
         }
@@ -107,9 +119,10 @@ export function generateChordPad(
   tempoBpm: number,
   bars: number,
   style: string,
+  beatsPerBar = 4,
+  beatUnit = 4,
 ): NoteEvent[] {
-  const beatsPerBar = 4;
-  const beat = beatSeconds(tempoBpm);
+  const beat = beatSeconds(tempoBpm, beatUnit);
   const notes: NoteEvent[] = [];
 
   for (let barIdx = 0; barIdx < bars; barIdx++) {
@@ -157,18 +170,19 @@ export function generateArpeggio(
   chords: Chord[],
   tempoBpm: number,
   bars: number,
+  beatsPerBar = 4,
+  beatUnit = 4,
 ): NoteEvent[] {
-  const beatsPerBar = 4;
-  const beat = beatSeconds(tempoBpm);
-  const step = beat * 0.5; // 8th notes
+  const barDuration = barSeconds(tempoBpm, beatsPerBar, beatUnit);
+  const step = beatUnitSeconds(tempoBpm, 8);
   const notes: NoteEvent[] = [];
 
   for (let barIdx = 0; barIdx < bars; barIdx++) {
     const chord = chords[barIdx % chords.length];
-    const bStart = barIdx * beatsPerBar * beat;
+    const bStart = barIdx * barDuration;
     const tones = chord.tones;
 
-    const stepsPerBar = beatsPerBar * 2; // 8 eighth notes per bar
+    const stepsPerBar = Math.max(1, Math.round(barDuration / step));
     for (let idx = 0; idx < stepsPerBar; idx++) {
       const tone = tones[idx % tones.length];
       const start = bStart + idx * step;
@@ -208,10 +222,13 @@ export function generateDrumPattern(
   tempoBpm: number,
   bars: number,
   style: string,
+  beatsPerBar = 4,
+  beatUnit = 4,
 ): NoteEvent[] {
-  const beatsPerBar = 4;
-  const beat = beatSeconds(tempoBpm);
+  const beat = beatSeconds(tempoBpm, beatUnit);
   const notes: NoteEvent[] = [];
+  const strongBeats = new Set(primaryBeatIndices(beatsPerBar));
+  const backbeats = new Set(backbeatIndices(beatsPerBar));
 
   for (let barIdx = 0; barIdx < bars; barIdx++) {
     const bStart = barIdx * beatsPerBar * beat;
@@ -228,47 +245,37 @@ export function generateDrumPattern(
         notes.push({ pitch: 51, start: skipStart, duration: beat * 0.2, velocity: 55 });
 
         // Kick on beat 1
-        if (b === 0) {
+        if (strongBeats.has(b)) {
           notes.push({ pitch: 36, start, duration: 0.08, velocity: 85 });
         }
-        // Brush snare on 2 and 4
-        if (b === 1 || b === 3) {
+        if (backbeats.has(b)) {
           notes.push({ pitch: 38, start, duration: 0.08, velocity: 65 });
         }
       }
     } else if (style === 'modal') {
-      // Modal: kick on 1, snare on 3, ghost hi-hat pattern
       for (let b = 0; b < beatsPerBar; b++) {
         const start = bStart + b * beat;
 
-        // Kick on beat 1
-        if (b === 0) {
+        if (strongBeats.has(b)) {
           notes.push({ pitch: 36, start, duration: 0.08, velocity: 95 });
         }
-        // Snare on beat 3
-        if (b === 2) {
+        if (backbeats.has(b)) {
           notes.push({ pitch: 38, start, duration: 0.08, velocity: 90 });
         }
-        // Closed hi-hat on every beat
         notes.push({ pitch: 42, start, duration: 0.05, velocity: 64 });
-        // Ghost note hi-hat on the "and" of each beat
         const offBeat = start + beat * 0.5;
         notes.push({ pitch: 42, start: offBeat, duration: 0.05, velocity: 48 });
       }
     } else {
-      // Pop: kick on 1,3; snare on 2,4; hi-hat on all 8th notes
       for (let b = 0; b < beatsPerBar; b++) {
         const start = bStart + b * beat;
 
-        // Kick on 1 and 3
-        if (b === 0 || b === 2) {
+        if (strongBeats.has(b)) {
           notes.push({ pitch: 36, start, duration: 0.08, velocity: 95 });
         }
-        // Snare on 2 and 4
-        if (b === 1 || b === 3) {
+        if (backbeats.has(b)) {
           notes.push({ pitch: 38, start, duration: 0.08, velocity: 90 });
         }
-        // Closed hi-hat on every 8th note
         notes.push({ pitch: 42, start, duration: 0.05, velocity: 64 });
         const andStart = start + beat * 0.5;
         notes.push({ pitch: 42, start: andStart, duration: 0.05, velocity: 58 });
@@ -292,12 +299,10 @@ export function generateDrumPattern(
 export function arrangementToMidi(arrangement: Arrangement): Midi {
   const midi = new Midi();
 
-  // Set tempo
   midi.header.setTempo(arrangement.tempoBpm);
-  // Set time signature to 4/4
   midi.header.timeSignatures.push({
     ticks: 0,
-    timeSignature: [4, 4],
+    timeSignature: [arrangement.beatsPerBar, arrangement.beatUnit],
   });
 
   for (const arrTrack of arrangement.tracks) {
@@ -333,6 +338,8 @@ export function buildArrangement(
   bars: number,
   style: 'pop' | 'modal' | 'jazz',
   complexity: 'basic' | 'rich' = 'basic',
+  beatsPerBar = 4,
+  beatUnit = 4,
 ): Arrangement {
   const tracks: ArrangementTrack[] = [];
 
@@ -347,7 +354,7 @@ export function buildArrangement(
   });
 
   // Bass
-  const bassNotes = generateBassLine(chords, tempoBpm, bars, style);
+  const bassNotes = generateBassLine(chords, tempoBpm, bars, style, beatsPerBar, beatUnit);
   tracks.push({
     name: 'Bass',
     instrument: 'Electric Bass (finger)',
@@ -357,7 +364,7 @@ export function buildArrangement(
   });
 
   // Chord pad / Harmony
-  const padNotes = generateChordPad(chords, tempoBpm, bars, style);
+  const padNotes = generateChordPad(chords, tempoBpm, bars, style, beatsPerBar, beatUnit);
   const padProgram = style === 'modal' ? 4 : 0;
   tracks.push({
     name: 'Harmony',
@@ -368,7 +375,7 @@ export function buildArrangement(
   });
 
   // Drums
-  const drumNotes = generateDrumPattern(tempoBpm, bars, style);
+  const drumNotes = generateDrumPattern(tempoBpm, bars, style, beatsPerBar, beatUnit);
   tracks.push({
     name: 'Drums',
     instrument: 'Drum Kit',
@@ -379,7 +386,7 @@ export function buildArrangement(
 
   // Rich complexity: add arpeggio track
   if (complexity === 'rich') {
-    const arpNotes = generateArpeggio(chords, tempoBpm, bars);
+    const arpNotes = generateArpeggio(chords, tempoBpm, bars, beatsPerBar, beatUnit);
     const arpProgram = style === 'modal' ? 4 : 0;
     tracks.push({
       name: 'Arp Keys',
@@ -393,6 +400,8 @@ export function buildArrangement(
   return {
     tracks,
     tempoBpm,
+    beatsPerBar,
+    beatUnit,
     bars,
     style,
     complexity,
@@ -434,5 +443,5 @@ export function downloadMidi(midi: Midi, filename: string): void {
  * Calculate the total duration of an arrangement in seconds.
  */
 export function arrangementDuration(arrangement: Arrangement): number {
-  return arrangement.bars * barSeconds(arrangement.tempoBpm);
+  return arrangement.bars * barSeconds(arrangement.tempoBpm, arrangement.beatsPerBar, arrangement.beatUnit);
 }

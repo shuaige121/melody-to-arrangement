@@ -41,3 +41,11 @@ def test_analysis_handles_empty_notes_gracefully():
     assert melody_result.melody_density == "sparse"
     assert melody_result.total_bars == 1
     assert structure_result == []
+
+
+def test_analyze_melody_prefers_explicit_metadata(simple_melody):
+    result = analyze_melody(simple_melody, tempo_bpm=132, time_sig=(3, 4), ppq=960)
+
+    assert result.tempo == 132
+    assert result.time_sig == (3, 4)
+    assert result.total_bars == 3

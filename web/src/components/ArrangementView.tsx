@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties, WheelEvent } from 'react';
 import type { Arrangement, ArrangementTrack } from '../types/music.ts';
 import { useI18n } from '../i18n.ts';
+import { beatsFromSeconds } from '../engine/time-signature.ts';
 import './ArrangementView.css';
 
 interface ArrangementViewProps {
@@ -105,26 +106,26 @@ function normalizeSections(input: SectionMarker[] | undefined, totalBars: number
 export default function ArrangementView({
   arrangement,
   currentBeat,
-  beatsPerBar = 4,
+  beatsPerBar,
   sections,
 }: ArrangementViewProps) {
   const { t } = useI18n();
   const [beatWidth, setBeatWidth] = useState(DEFAULT_BEAT_WIDTH);
 
-  const safeBeatsPerBar = Math.max(1, Math.floor(beatsPerBar));
+  const safeBeatsPerBar = Math.max(1, Math.floor(beatsPerBar ?? arrangement?.beatsPerBar ?? 4));
   const tempoBpm = arrangement ? Math.max(1, arrangement.tempoBpm || 120) : 120;
-  const secondsPerBeat = 60 / tempoBpm;
+  const beatUnit = arrangement?.beatUnit ?? 4;
 
   const inferredBeats = useMemo(() => {
     if (!arrangement) return 0;
     return arrangement.tracks.reduce((maxBeat, track) => {
       const trackMaxBeat = track.notes.reduce((noteMax, note) => {
-        const noteEndBeat = (note.start + note.duration) / secondsPerBeat;
+        const noteEndBeat = beatsFromSeconds(note.start + note.duration, tempoBpm, beatUnit);
         return Math.max(noteMax, noteEndBeat);
       }, 0);
       return Math.max(maxBeat, trackMaxBeat);
     }, 0);
-  }, [arrangement, secondsPerBeat]);
+  }, [arrangement, tempoBpm, beatUnit]);
 
   const totalBeats = arrangement
     ? Math.max(1, Math.ceil(Math.max(arrangement.bars * safeBeatsPerBar, inferredBeats)))
@@ -151,8 +152,8 @@ export default function ArrangementView({
       const noteTravel = Math.max(1, TRACK_HEIGHT - TRACK_PADDING_Y * 2 - noteHeight);
 
       const blocks = notes.map((note) => {
-        const startBeat = note.start / secondsPerBeat;
-        const durationBeats = Math.max(0.125, note.duration / secondsPerBeat);
+        const startBeat = beatsFromSeconds(note.start, tempoBpm, beatUnit);
+        const durationBeats = Math.max(0.125, beatsFromSeconds(note.duration, tempoBpm, beatUnit));
         const normalizedPitch = (maxPitch - note.pitch) / pitchRange;
         const top = TRACK_PADDING_Y + normalizedPitch * noteTravel;
 
@@ -168,7 +169,7 @@ export default function ArrangementView({
       const subtitle = track.instrument || `Program ${track.program}`;
       return { track, color, notes: blocks, subtitle };
     });
-  }, [arrangement, beatWidth, secondsPerBeat]);
+  }, [arrangement, beatWidth, tempoBpm, beatUnit]);
 
   const timelineGridStyle = useMemo<CSSProperties>(() => {
     return {

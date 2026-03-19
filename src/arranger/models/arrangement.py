@@ -9,7 +9,7 @@ class Track(BaseModel):
     name: str
     channel: int = Field(ge=0, le=15)
     program: int = Field(ge=0, le=127, default=0)
-    notes: list[Note] = []
+    notes: list[Note] = Field(default_factory=list)
 
 
 class AnalysisResult(BaseModel):
@@ -42,4 +42,4 @@ class Arrangement(BaseModel):
     time_sig: tuple[int, int]
     ppq: int = 480
     total_bars: int
-    metadata: dict = {}
+    metadata: dict = Field(default_factory=dict)
