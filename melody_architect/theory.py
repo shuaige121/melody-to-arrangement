@@ -105,7 +105,10 @@ def load_scales_from_db() -> dict[str, list[int]]:
         rows = conn.execute(
             "SELECT name, intervals FROM scales_modes ORDER BY id"
         ).fetchall()
-    return {_normalize_lookup_key(name): _parse_intervals(intervals) for name, intervals in rows}
+    return {
+        _normalize_lookup_key(name): _parse_intervals(intervals)
+        for name, intervals in rows
+    }
 
 
 def load_chords_from_db() -> dict[str, list[int]]:
@@ -116,7 +119,10 @@ def load_chords_from_db() -> dict[str, list[int]]:
         rows = conn.execute(
             "SELECT name, intervals FROM chord_types ORDER BY id"
         ).fetchall()
-    return {_normalize_lookup_key(name): _parse_intervals(intervals) for name, intervals in rows}
+    return {
+        _normalize_lookup_key(name): _parse_intervals(intervals)
+        for name, intervals in rows
+    }
 
 
 def get_scale(name: str) -> list[int]:
@@ -183,7 +189,9 @@ def parse_roman(token: str) -> RomanToken:
         raise ValueError(f"Invalid roman numeral token: {token}")
 
     accidental_prefix = match.group("accidental")
-    accidental = -1 if accidental_prefix == "b" else (1 if accidental_prefix == "#" else 0)
+    accidental = (
+        -1 if accidental_prefix == "b" else (1 if accidental_prefix == "#" else 0)
+    )
     roman = match.group("roman")
     suffix = match.group("suffix") or ""
 
@@ -201,9 +209,15 @@ def parse_roman(token: str) -> RomanToken:
 
 
 def infer_chord_quality(token: RomanToken) -> str:
-    suffix = token.suffix.lower()
+    suffix = token.suffix.lower().strip()
     if "dim" in suffix or "°" in suffix:
         return "dim"
+    if suffix == "sus2":
+        return "sus2"
+    if suffix == "sus4":
+        return "sus4"
+    if suffix == "aug":
+        return "aug"
     if "maj7" in suffix:
         return "maj7"
     if suffix.startswith("m7"):
@@ -229,6 +243,12 @@ def chord_symbol(root_name: str, quality: str) -> str:
         return f"{root_name}m"
     if quality == "dim":
         return f"{root_name}dim"
+    if quality == "aug":
+        return f"{root_name}aug"
+    if quality == "sus2":
+        return f"{root_name}sus2"
+    if quality == "sus4":
+        return f"{root_name}sus4"
     if quality == "dominant7":
         return f"{root_name}7"
     if quality == "maj7":
@@ -243,7 +263,9 @@ def resolve_roman_to_chord(token: str, tonic_pc: int, mode: str) -> Chord:
     intervals = scale_intervals(mode)
     root_pc = (tonic_pc + intervals[parsed.degree - 1] + parsed.accidental) % 12
     quality = infer_chord_quality(parsed)
-    tones = tuple((root_pc + interval) % 12 for interval in CHORD_TONE_INTERVALS[quality])
+    tones = tuple(
+        (root_pc + interval) % 12 for interval in CHORD_TONE_INTERVALS[quality]
+    )
     prefer_flats = "b" in token
     root_name = pc_to_name(root_pc, prefer_flats=prefer_flats)
     return Chord(

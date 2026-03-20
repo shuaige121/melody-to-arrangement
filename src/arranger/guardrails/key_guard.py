@@ -28,8 +28,14 @@ def _build_scale(root: int, intervals: tuple[int, ...]) -> set[int]:
 
 
 SCALE_PITCH_CLASSES: dict[str, set[int]] = {
-    **{f"{name}_major": _build_scale(root, MAJOR_INTERVALS) for name, root in ROOTS.items()},
-    **{f"{name}_minor": _build_scale(root, MINOR_INTERVALS) for name, root in ROOTS.items()},
+    **{
+        f"{name}_major": _build_scale(root, MAJOR_INTERVALS)
+        for name, root in ROOTS.items()
+    },
+    **{
+        f"{name}_minor": _build_scale(root, MINOR_INTERVALS)
+        for name, root in ROOTS.items()
+    },
 }
 
 
@@ -44,6 +50,9 @@ def fix_key(note: Note, allowed: set[int]) -> Note:
     candidates = [n for n in range(128) if n % 12 in allowed]
     fixed_note_number = min(
         candidates,
-        key=lambda candidate: (abs(candidate - note.note_number), candidate > note.note_number),
+        key=lambda candidate: (
+            abs(candidate - note.note_number),
+            candidate > note.note_number,
+        ),
     )
     return note.model_copy(update={"note_number": fixed_note_number})

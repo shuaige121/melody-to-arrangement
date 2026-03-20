@@ -13,7 +13,9 @@ def _sample_arrangement() -> Arrangement:
         Note(note_number=60, velocity=90, start_tick=0, duration_tick=480, channel=0),
         Note(note_number=64, velocity=88, start_tick=480, duration_tick=480, channel=0),
         Note(note_number=67, velocity=86, start_tick=960, duration_tick=480, channel=0),
-        Note(note_number=72, velocity=92, start_tick=1440, duration_tick=480, channel=0),
+        Note(
+            note_number=72, velocity=92, start_tick=1440, duration_tick=480, channel=0
+        ),
     ]
     track = Track(name="piano", channel=0, program=0, notes=notes)
     return Arrangement(

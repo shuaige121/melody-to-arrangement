@@ -2,6 +2,8 @@ from pathlib import Path
 
 import mido
 import pytest
+import arranger.engine.arrange as arrange_module
+from arranger.models.guardrail import GuardrailSet
 from arranger.models.arrangement import AnalysisResult, ArrangementStrategy
 from arranger.models.note import Note
 from arranger.patterns.bass import generate_bass_line
@@ -11,13 +13,17 @@ from arranger.patterns.piano import generate_piano_comp
 try:
     from arranger.engine import arrange_melody
     from arranger.engine.arrange import _validate_track_notes
+    from arranger.guardrails.validator import _resolve_track_range
 except Exception:
     arrange_melody = None
     _validate_track_notes = None
+    _resolve_track_range = None
 
 
 pytestmark = pytest.mark.skipif(
-    arrange_melody is None or _validate_track_notes is None,
+    arrange_melody is None
+    or _validate_track_notes is None
+    or _resolve_track_range is None,
     reason="arranger.engine arrange helpers are not available in this build",
 )
 
@@ -52,12 +58,22 @@ def _write_metered_input_midi(
     midi.tracks.append(track)
 
     track.append(mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(120), time=0))
-    track.append(mido.MetaMessage("time_signature", numerator=numerator, denominator=denominator, time=0))
+    track.append(
+        mido.MetaMessage(
+            "time_signature", numerator=numerator, denominator=denominator, time=0
+        )
+    )
 
     for idx in range(note_count):
         pitch = 60 + (idx % 5)
-        track.append(mido.Message("note_on", note=pitch, velocity=90, channel=0, time=0))
-        track.append(mido.Message("note_off", note=pitch, velocity=0, channel=0, time=note_duration_ticks))
+        track.append(
+            mido.Message("note_on", note=pitch, velocity=90, channel=0, time=0)
+        )
+        track.append(
+            mido.Message(
+                "note_off", note=pitch, velocity=0, channel=0, time=note_duration_ticks
+            )
+        )
 
     track.append(mido.MetaMessage("end_of_track", time=0))
     midi.save(path)
@@ -68,7 +84,9 @@ def _write_multitrack_input_midi(path: Path) -> None:
 
     meta_track = mido.MidiTrack()
     meta_track.append(mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(120), time=0))
-    meta_track.append(mido.MetaMessage("time_signature", numerator=4, denominator=4, time=0))
+    meta_track.append(
+        mido.MetaMessage("time_signature", numerator=4, denominator=4, time=0)
+    )
     meta_track.append(mido.MetaMessage("end_of_track", time=0))
     midi.tracks.append(meta_track)
 
@@ -83,10 +101,18 @@ def _write_multitrack_input_midi(path: Path) -> None:
 
     melody_track = mido.MidiTrack()
     melody_track.append(mido.MetaMessage("track_name", name="melody_input", time=0))
-    melody_track.append(mido.Message("note_on", note=72, velocity=90, channel=0, time=0))
-    melody_track.append(mido.Message("note_off", note=72, velocity=0, channel=0, time=480))
-    melody_track.append(mido.Message("note_on", note=76, velocity=90, channel=0, time=0))
-    melody_track.append(mido.Message("note_off", note=76, velocity=0, channel=0, time=480))
+    melody_track.append(
+        mido.Message("note_on", note=72, velocity=90, channel=0, time=0)
+    )
+    melody_track.append(
+        mido.Message("note_off", note=72, velocity=0, channel=0, time=480)
+    )
+    melody_track.append(
+        mido.Message("note_on", note=76, velocity=90, channel=0, time=0)
+    )
+    melody_track.append(
+        mido.Message("note_off", note=76, velocity=0, channel=0, time=480)
+    )
     melody_track.append(mido.MetaMessage("end_of_track", time=0))
     midi.tracks.append(melody_track)
 
@@ -150,7 +176,9 @@ def test_validate_track_notes_applies_guardrails():
         Note(note_number=58, velocity=90, start_tick=125, duration_tick=61, channel=1),
     ]
 
-    fixed_notes = _validate_track_notes(bad_notes, analysis=analysis, strategy=strategy, track_name="bass")
+    fixed_notes = _validate_track_notes(
+        bad_notes, analysis=analysis, strategy=strategy, track_name="bass"
+    )
 
     assert len(fixed_notes) == 1
     assert fixed_notes[0].note_number % 12 in {0, 2, 4, 5, 7, 9, 11}
@@ -159,7 +187,70 @@ def test_validate_track_notes_applies_guardrails():
     assert fixed_notes[0].duration_tick % 120 == 0
 
 
-def test_arrange_pipeline_uses_extracted_melody_track_for_multitrack_input(tmp_path, monkeypatch):
+def test_resolve_track_range_uses_requested_track_name():
+    guardrails = GuardrailSet(
+        key_name="C_major",
+        allowed_pitch_classes={0, 2, 4, 5, 7, 9, 11},
+        note_ranges={"bass": (28, 55), "piano": (48, 84)},
+    )
+
+    assert _resolve_track_range(guardrails, "piano") == (48, 84)
+
+
+def test_validate_track_notes_calls_validator_with_correct_signature(monkeypatch):
+    analysis = AnalysisResult(
+        key="C_major",
+        tempo=120,
+        time_sig=(4, 4),
+        total_bars=1,
+        sections=[],
+        melody_range=(60, 72),
+        melody_density="medium",
+    )
+    strategy = ArrangementStrategy(
+        progression_style="I-V-vi-IV",
+        drum_style="4_4_basic",
+        bass_style="root_octave",
+        piano_style="block_chord",
+        energy_curve=["medium"],
+    )
+    notes = [
+        Note(note_number=40, velocity=90, start_tick=0, duration_tick=120, channel=1),
+    ]
+    guardrails = GuardrailSet(
+        key_name="C_major",
+        allowed_pitch_classes={0, 2, 4, 5, 7, 9, 11},
+        note_ranges={"bass": (28, 55)},
+    )
+    captured: dict[str, object] = {}
+
+    def fake_create_guardrails(key: str, track_name: str = "piano") -> GuardrailSet:
+        captured["create_guardrails"] = (key, track_name)
+        return guardrails
+
+    def fake_validate_and_fix(
+        notes_arg: list[Note],
+        guardrails_arg: GuardrailSet,
+        chord_notes: list[int] | None = None,
+    ) -> list[Note]:
+        captured["validate_and_fix"] = (notes_arg, guardrails_arg, chord_notes)
+        return notes_arg
+
+    monkeypatch.setattr(arrange_module, "create_guardrails", fake_create_guardrails)
+    monkeypatch.setattr(arrange_module, "validate_and_fix", fake_validate_and_fix)
+
+    result = _validate_track_notes(
+        notes, analysis=analysis, strategy=strategy, track_name="bass"
+    )
+
+    assert result == notes
+    assert captured["create_guardrails"] == ("C_major", "bass")
+    assert captured["validate_and_fix"] == (notes, guardrails, None)
+
+
+def test_arrange_pipeline_uses_extracted_melody_track_for_multitrack_input(
+    tmp_path, monkeypatch
+):
     input_path = tmp_path / "multitrack.mid"
     output_path = tmp_path / "output.mid"
     _write_multitrack_input_midi(input_path)
@@ -174,7 +265,9 @@ def test_arrange_pipeline_uses_extracted_melody_track_for_multitrack_input(tmp_p
     )
 
     output_midi = mido.MidiFile(str(output_path))
-    lead_track = next(track for track in output_midi.tracks if _track_name(track) == "Lead Melody")
+    lead_track = next(
+        track for track in output_midi.tracks if _track_name(track) == "Lead Melody"
+    )
     lead_pitches = {
         message.note
         for message in lead_track
@@ -210,7 +303,9 @@ def test_drum_pattern_respects_six_eight_bar_length():
     assert max(note.start_tick + note.duration_tick for note in notes) <= 1440
 
 
-def test_arrange_pipeline_preserves_six_eight_grid_for_accompaniment(tmp_path, monkeypatch):
+def test_arrange_pipeline_preserves_six_eight_grid_for_accompaniment(
+    tmp_path, monkeypatch
+):
     input_path = tmp_path / "compound.mid"
     output_path = tmp_path / "output.mid"
     _write_metered_input_midi(
@@ -232,11 +327,17 @@ def test_arrange_pipeline_preserves_six_eight_grid_for_accompaniment(tmp_path, m
 
     output_midi = mido.MidiFile(str(output_path))
     tempo_track = output_midi.tracks[0]
-    time_signature = next(message for message in tempo_track if message.type == "time_signature")
+    time_signature = next(
+        message for message in tempo_track if message.type == "time_signature"
+    )
     assert (time_signature.numerator, time_signature.denominator) == (6, 8)
 
-    bass_track = next(track for track in output_midi.tracks if _track_name(track) == "Bass")
-    piano_track = next(track for track in output_midi.tracks if _track_name(track) == "Piano")
+    bass_track = next(
+        track for track in output_midi.tracks if _track_name(track) == "Bass"
+    )
+    piano_track = next(
+        track for track in output_midi.tracks if _track_name(track) == "Piano"
+    )
 
     bass_starts = _absolute_note_on_ticks(bass_track)
     piano_starts = _absolute_note_on_ticks(piano_track)

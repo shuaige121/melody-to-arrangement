@@ -31,7 +31,9 @@ WORKER = "codex-3"
 def bits(bit_string: str) -> list[int]:
     cleaned = "".join(ch for ch in bit_string if ch in "01")
     if len(cleaned) != STEPS:
-        raise ValueError(f"Pattern must be {STEPS} bits, got {len(cleaned)}: {bit_string}")
+        raise ValueError(
+            f"Pattern must be {STEPS} bits, got {len(cleaned)}: {bit_string}"
+        )
     return [int(ch) for ch in cleaned]
 
 
@@ -802,7 +804,9 @@ BASS_SEARCH_SPECS = [
 ]
 
 
-def build_rhythm_from_template(template: str, style_tag: str) -> tuple[list[int], list[int], list[int]]:
+def build_rhythm_from_template(
+    template: str, style_tag: str
+) -> tuple[list[int], list[int], list[int]]:
     seed = stable_seed(style_tag)
     base = RHYTHM_TEMPLATES[template]
 
@@ -810,7 +814,14 @@ def build_rhythm_from_template(template: str, style_tag: str) -> tuple[list[int]
     snare = base["snare"][:]
     hihat = rotate(base["hihat"], ((seed // 5) % 2) * 2)
 
-    if template in {"straight_backbeat", "syncopated_backbeat", "breakbeat", "four_on_floor", "offbeat_hat", "double_kick"}:
+    if template in {
+        "straight_backbeat",
+        "syncopated_backbeat",
+        "breakbeat",
+        "four_on_floor",
+        "offbeat_hat",
+        "double_kick",
+    }:
         snare[4] = 1
         snare[12] = 1
     if template == "halftime":
@@ -854,7 +865,9 @@ def build_bass_from_template(template: str, style_tag: str) -> list[int]:
     return validate_interval_sequence(intervals)
 
 
-def run_search_bundle(queries: list[str], fallback_suffix: str) -> tuple[dict[str, list[dict[str, str]]], list[tuple[str, int, str, str]]]:
+def run_search_bundle(
+    queries: list[str], fallback_suffix: str
+) -> tuple[dict[str, list[dict[str, str]]], list[tuple[str, int, str, str]]]:
     grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
     logs: list[tuple[str, int, str, str]] = []
 
@@ -873,7 +886,11 @@ def run_search_bundle(queries: list[str], fallback_suffix: str) -> tuple[dict[st
                     (
                         fallback_query,
                         len(fallback_results),
-                        "|".join(r.get("url", "") for r in fallback_results[:5] if r.get("url")),
+                        "|".join(
+                            r.get("url", "")
+                            for r in fallback_results[:5]
+                            if r.get("url")
+                        ),
                         WORKER,
                     )
                 )
@@ -891,13 +908,19 @@ def run_search_bundle(queries: list[str], fallback_suffix: str) -> tuple[dict[st
     return grouped, logs
 
 
-def build_rhythm_search_patterns() -> tuple[list[dict[str, Any]], list[tuple[str, int, str, str]]]:
+def build_rhythm_search_patterns() -> tuple[
+    list[dict[str, Any]], list[tuple[str, int, str, str]]
+]:
     queries = [item["query"] for item in RHYTHM_SEARCH_SPECS]
     results_by_query, logs = run_search_bundle(queries, "drum groove notation")
     records: list[dict[str, Any]] = []
 
     for spec in RHYTHM_SEARCH_SPECS:
-        top = results_by_query.get(spec["query"], [{}])[0] if results_by_query.get(spec["query"]) else {}
+        top = (
+            results_by_query.get(spec["query"], [{}])[0]
+            if results_by_query.get(spec["query"])
+            else {}
+        )
         source_url = top.get("url", "no_result")
         title = top.get("title", "no_result")
 
@@ -919,13 +942,19 @@ def build_rhythm_search_patterns() -> tuple[list[dict[str, Any]], list[tuple[str
     return records, logs
 
 
-def build_bass_search_patterns() -> tuple[list[dict[str, Any]], list[tuple[str, int, str, str]]]:
+def build_bass_search_patterns() -> tuple[
+    list[dict[str, Any]], list[tuple[str, int, str, str]]
+]:
     queries = [item["query"] for item in BASS_SEARCH_SPECS]
     results_by_query, logs = run_search_bundle(queries, "bass line notation")
     records: list[dict[str, Any]] = []
 
     for spec in BASS_SEARCH_SPECS:
-        top = results_by_query.get(spec["query"], [{}])[0] if results_by_query.get(spec["query"]) else {}
+        top = (
+            results_by_query.get(spec["query"], [{}])[0]
+            if results_by_query.get(spec["query"])
+            else {}
+        )
         source_url = top.get("url", "no_result")
         title = top.get("title", "no_result")
 

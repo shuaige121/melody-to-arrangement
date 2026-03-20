@@ -21,9 +21,9 @@ DEFAULT_NOTE_RANGES: dict[str, tuple[int, int]] = {
 }
 
 
-def _resolve_track_range(guardrails: GuardrailSet) -> tuple[int, int]:
-    if guardrails.note_ranges:
-        return next(iter(guardrails.note_ranges.values()))
+def _resolve_track_range(guardrails: GuardrailSet, track_name: str) -> tuple[int, int]:
+    if guardrails.note_ranges and track_name in guardrails.note_ranges:
+        return guardrails.note_ranges[track_name]
     return (0, 127)
 
 
@@ -31,7 +31,8 @@ def validate_and_fix(
     notes: list[Note], guardrails: GuardrailSet, chord_notes: list[int] | None = None
 ) -> list[Note]:
     corrected_notes: list[Note] = []
-    low, high = _resolve_track_range(guardrails)
+    track_name = next(iter(guardrails.note_ranges), "piano")
+    low, high = _resolve_track_range(guardrails, track_name)
 
     for idx, original_note in enumerate(notes):
         current_note = original_note

@@ -281,6 +281,52 @@ const translations: Record<Locale, Record<string, string>> = {
     loading: '読み込み中...',
     error: 'エラー',
     success: '成功',
+
+    'upload.analyzing': 'ファイルを解析中...',
+    'upload.dragDrop': 'ここに音楽ファイルをドラッグ＆ドロップ',
+    'upload.dropHere': 'ここにファイルをドロップ',
+    'upload.clickBrowse': 'またはクリックして選択',
+    'upload.formats': '対応形式: MIDI (.mid, .midi) / MusicXML (.xml, .musicxml, .mxl) / 音声 (.wav, .mp3, .flac, .ogg, .aac, .m4a)',
+    'upload.noNotes': 'このファイルから音符を検出できませんでした。別のファイルを試すか、手動で描画してください。',
+
+    'transport.rewind': '先頭に戻る',
+    'transport.play': '再生',
+    'transport.pause': '一時停止',
+    'transport.stop': '停止',
+    'transport.bars': '小節',
+    'transport.style': 'スタイル',
+    'transport.complexity': '複雑さ',
+    'transport.stylePop': 'ポップ',
+    'transport.styleModal': 'モーダル',
+    'transport.styleJazz': 'ジャズ',
+    'transport.complexityBasic': 'ベーシック',
+    'transport.complexityRich': 'リッチ',
+
+    'trackList.title': 'トラック',
+    'trackList.empty': 'トラックを表示するにはアレンジを生成してください',
+
+    'arrangement.emptyTitle': '生成をクリックしてアレンジを作成',
+    'arrangement.emptyDesc': 'メロディーをアップロードまたは描画してから、ベース、ハーモニー、ドラムのトラックを生成します。',
+
+    'sidebar.instruments': '楽器 (128 GM)',
+    'sidebar.leadMelody': 'リードメロディー',
+    'sidebar.bass': 'ベース',
+    'sidebar.harmonyArp': 'ハーモニー / アルペジオ',
+    'sidebar.melodyInput': 'メロディー入力',
+    'sidebar.melody': 'メロディー',
+    'sidebar.demo': 'デモ',
+    'sidebar.uploadFile': 'ファイルをアップロード',
+
+    'pianoRoll.title': 'ピアノロール',
+
+    'error.noNotes': 'アレンジする音符がありません。先にピアノロールに音符を描画してください。',
+    'error.generateFirst': '先にアレンジを生成してください。',
+    'error.playbackFailed': '再生に失敗しました',
+    'error.stopFailed': '停止に失敗しました',
+    'error.midiExport': 'MIDIのエクスポートに失敗しました',
+    'error.jsonExport': 'JSONのエクスポートに失敗しました',
+
+    'demo.name': 'デモ: ハ長調音階',
   },
   ms: {
     step_upload: 'Muat Naik',
@@ -335,6 +381,52 @@ const translations: Record<Locale, Record<string, string>> = {
     loading: 'Memuatkan...',
     error: 'Ralat',
     success: 'Berjaya',
+
+    'upload.analyzing': 'Sedang menganalisis fail anda...',
+    'upload.dragDrop': 'Seret dan lepaskan fail muzik anda di sini',
+    'upload.dropHere': 'Lepaskan fail anda di sini',
+    'upload.clickBrowse': 'atau klik untuk memilih',
+    'upload.formats': 'Disokong: MIDI (.mid, .midi) / MusicXML (.xml, .musicxml, .mxl) / Audio (.wav, .mp3, .flac, .ogg, .aac, .m4a)',
+    'upload.noNotes': 'Tiada nota dikesan dalam fail ini. Cuba fail lain atau lukis secara manual.',
+
+    'transport.rewind': 'Undur',
+    'transport.play': 'Main',
+    'transport.pause': 'Jeda',
+    'transport.stop': 'Henti',
+    'transport.bars': 'Bar',
+    'transport.style': 'Gaya',
+    'transport.complexity': 'Kerumitan',
+    'transport.stylePop': 'Pop',
+    'transport.styleModal': 'Modal',
+    'transport.styleJazz': 'Jazz',
+    'transport.complexityBasic': 'Asas',
+    'transport.complexityRich': 'Kaya',
+
+    'trackList.title': 'Trek',
+    'trackList.empty': 'Jana aransemen untuk melihat trek',
+
+    'arrangement.emptyTitle': 'Klik Jana untuk mencipta aransemen',
+    'arrangement.emptyDesc': 'Muat naik atau lukis melodi, kemudian jana trek untuk bass, harmoni dan dram.',
+
+    'sidebar.instruments': 'Instrumen (128 GM)',
+    'sidebar.leadMelody': 'Melodi Utama',
+    'sidebar.bass': 'Bass',
+    'sidebar.harmonyArp': 'Harmoni / Arpeggio',
+    'sidebar.melodyInput': 'Input Melodi',
+    'sidebar.melody': 'Melodi',
+    'sidebar.demo': 'Demo',
+    'sidebar.uploadFile': 'Muat Naik Fail',
+
+    'pianoRoll.title': 'Piano Roll',
+
+    'error.noNotes': 'Tiada nota untuk diaransemen. Lukis beberapa nota pada piano roll dahulu.',
+    'error.generateFirst': 'Jana aransemen dahulu.',
+    'error.playbackFailed': 'Main balik gagal',
+    'error.stopFailed': 'Henti gagal',
+    'error.midiExport': 'Eksport MIDI gagal',
+    'error.jsonExport': 'Eksport JSON gagal',
+
+    'demo.name': 'Demo: Skala C Major',
   },
   ta: {
     step_upload: 'பதிவேற்றம்',
@@ -389,6 +481,52 @@ const translations: Record<Locale, Record<string, string>> = {
     loading: 'ஏற்றுகிறது...',
     error: 'பிழை',
     success: 'வெற்றி',
+
+    'upload.analyzing': 'உங்கள் கோப்பு பகுப்பாய்வு செய்யப்படுகிறது...',
+    'upload.dragDrop': 'உங்கள் இசைக் கோப்பை இங்கே இழுத்து விடவும்',
+    'upload.dropHere': 'உங்கள் கோப்பை இங்கே விடவும்',
+    'upload.clickBrowse': 'அல்லது தேர்வு செய்ய கிளிக் செய்யவும்',
+    'upload.formats': 'ஆதரவு: MIDI (.mid, .midi) / MusicXML (.xml, .musicxml, .mxl) / ஆடியோ (.wav, .mp3, .flac, .ogg, .aac, .m4a)',
+    'upload.noNotes': 'இந்த கோப்பில் எந்த குறிப்புகளும் கண்டறியப்படவில்லை. வேறு கோப்பை முயலுங்கள் அல்லது கைமுறையாக வரையுங்கள்.',
+
+    'transport.rewind': 'பின்நகர்த்து',
+    'transport.play': 'இயக்கு',
+    'transport.pause': 'இடைநிறுத்து',
+    'transport.stop': 'நிறுத்து',
+    'transport.bars': 'பார்கள்',
+    'transport.style': 'பாணி',
+    'transport.complexity': 'சிக்கல்தன்மை',
+    'transport.stylePop': 'பாப்',
+    'transport.styleModal': 'மோடல்',
+    'transport.styleJazz': 'ஜாஸ்',
+    'transport.complexityBasic': 'அடிப்படை',
+    'transport.complexityRich': 'செறிவு',
+
+    'trackList.title': 'ஒலித்தடங்கள்',
+    'trackList.empty': 'ஒலித்தடங்களைப் பார்க்க ஏற்பாட்டை உருவாக்கவும்',
+
+    'arrangement.emptyTitle': 'ஏற்பாட்டை உருவாக்க "உருவாக்கு" என்பதைக் கிளிக் செய்யவும்',
+    'arrangement.emptyDesc': 'மெலடியைப் பதிவேற்றவோ வரையவோ செய்து, பாஸ், ஹார்மனி மற்றும் டிரம்ஸ் டிராக்குகளை உருவாக்கவும்.',
+
+    'sidebar.instruments': 'கருவிகள் (128 GM)',
+    'sidebar.leadMelody': 'முன்னணி மெலடி',
+    'sidebar.bass': 'பாஸ்',
+    'sidebar.harmonyArp': 'ஹார்மனி / அர்பெஜியோ',
+    'sidebar.melodyInput': 'மெலடி உள்ளீடு',
+    'sidebar.melody': 'மெலடி',
+    'sidebar.demo': 'டெமோ',
+    'sidebar.uploadFile': 'கோப்பை பதிவேற்று',
+
+    'pianoRoll.title': 'பியானோ ரோல்',
+
+    'error.noNotes': 'ஏற்பாடு செய்ய குறிப்புகள் இல்லை. முதலில் பியானோ ரோலில் சில குறிப்புகளை வரையவும்.',
+    'error.generateFirst': 'முதலில் ஏற்பாட்டை உருவாக்கவும்.',
+    'error.playbackFailed': 'பிளேபேக் தோல்வியடைந்தது',
+    'error.stopFailed': 'நிறுத்துதல் தோல்வியடைந்தது',
+    'error.midiExport': 'MIDI ஏற்றுமதி தோல்வியடைந்தது',
+    'error.jsonExport': 'JSON ஏற்றுமதி தோல்வியடைந்தது',
+
+    'demo.name': 'டெமோ: C மேஜர் ஸ்கேல்',
   },
 };
 

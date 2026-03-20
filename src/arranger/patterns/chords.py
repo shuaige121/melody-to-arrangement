@@ -166,12 +166,13 @@ def _apply_bass_degree(
 ) -> list[int]:
     if bass_degree is None:
         return notes
-    bass_pc = (key_root_pc + scale[bass_degree - 1]) % 12
-    bass_note = root_midi_c_octave + scale[bass_degree - 1]
-    while bass_note % 12 != bass_pc:
-        bass_note += 12
-    while bass_note >= notes[0]:
-        bass_note -= 12
+    bass_interval = scale[bass_degree - 1]
+    bass_pc = (key_root_pc + bass_interval) % 12
+    bass_note = root_midi_c_octave + bass_interval
+    bass_note += (bass_pc - bass_note) % 12
+    if bass_note >= notes[0]:
+        octave_shifts = ((bass_note - notes[0]) // 12) + 1
+        bass_note -= 12 * octave_shifts
     bass_note = _clamp_midi(bass_note)
     return sorted([bass_note, *notes])
 
@@ -194,7 +195,9 @@ def resolve_progression(
     resolved: list[list[int]] = []
     for symbol in progression:
         base_symbol, _, bass_part = symbol.partition("/")
-        bass_degree = int(bass_part) if bass_part.isdigit() and 1 <= int(bass_part) <= 7 else None
+        bass_degree = (
+            int(bass_part) if bass_part.isdigit() and 1 <= int(bass_part) <= 7 else None
+        )
 
         match = _ROMAN_RE.match(base_symbol)
         if not match:
@@ -217,10 +220,14 @@ def resolve_progression(
 
         intervals = CHORD_INTERVALS.get(quality)
         if intervals is None:
-            raise ValueError(f"Unsupported chord quality '{quality}' in symbol '{symbol}'")
+            raise ValueError(
+                f"Unsupported chord quality '{quality}' in symbol '{symbol}'"
+            )
 
         chord_root_midi = (octave + 1) * 12 + degree_root
-        chord_notes = [_clamp_midi(chord_root_midi + interval) for interval in intervals]
+        chord_notes = [
+            _clamp_midi(chord_root_midi + interval) for interval in intervals
+        ]
         chord_notes = _apply_bass_degree(
             notes=chord_notes,
             bass_degree=bass_degree,

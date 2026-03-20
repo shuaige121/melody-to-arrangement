@@ -12,79 +12,344 @@ KNOWLEDGE_DB_PATH = Path(__file__).resolve().parents[1] / "knowledge" / "knowled
 
 STYLE_LAYERS = {
     "pop": [
-        {"role": "lead", "instrument": "vocal_or_lead_synth", "register": "C4-A5", "pattern": "phrase-driven"},
-        {"role": "harmony", "instrument": "piano_or_guitar", "register": "C3-C5", "pattern": "arpeggio_or_block"},
-        {"role": "bass", "instrument": "electric_bass", "register": "E1-C3", "pattern": "root_plus_connecting_tones"},
-        {"role": "texture", "instrument": "pad_or_strings", "register": "G3-G5", "pattern": "long_sustain"},
-        {"role": "rhythm", "instrument": "drum_kit", "register": "full", "pattern": "kick_snare_hat"},
+        {
+            "role": "lead",
+            "instrument": "vocal_or_lead_synth",
+            "register": "C4-A5",
+            "pattern": "phrase-driven",
+        },
+        {
+            "role": "harmony",
+            "instrument": "piano_or_guitar",
+            "register": "C3-C5",
+            "pattern": "arpeggio_or_block",
+        },
+        {
+            "role": "bass",
+            "instrument": "electric_bass",
+            "register": "E1-C3",
+            "pattern": "root_plus_connecting_tones",
+        },
+        {
+            "role": "texture",
+            "instrument": "pad_or_strings",
+            "register": "G3-G5",
+            "pattern": "long_sustain",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_kit",
+            "register": "full",
+            "pattern": "kick_snare_hat",
+        },
     ],
     "rock": [
-        {"role": "lead", "instrument": "electric_guitar_or_vocal", "register": "D4-A5", "pattern": "riff_driven"},
-        {"role": "harmony", "instrument": "rhythm_guitar", "register": "A2-E4", "pattern": "power_chords_or_open"},
-        {"role": "bass", "instrument": "electric_bass", "register": "E1-G3", "pattern": "eighth_note_root"},
-        {"role": "texture", "instrument": "distorted_guitar_layer", "register": "E3-B4", "pattern": "sustained_power"},
-        {"role": "rhythm", "instrument": "drum_kit", "register": "full", "pattern": "driving_rock_beat"},
+        {
+            "role": "lead",
+            "instrument": "electric_guitar_or_vocal",
+            "register": "D4-A5",
+            "pattern": "riff_driven",
+        },
+        {
+            "role": "harmony",
+            "instrument": "rhythm_guitar",
+            "register": "A2-E4",
+            "pattern": "power_chords_or_open",
+        },
+        {
+            "role": "bass",
+            "instrument": "electric_bass",
+            "register": "E1-G3",
+            "pattern": "eighth_note_root",
+        },
+        {
+            "role": "texture",
+            "instrument": "distorted_guitar_layer",
+            "register": "E3-B4",
+            "pattern": "sustained_power",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_kit",
+            "register": "full",
+            "pattern": "driving_rock_beat",
+        },
     ],
     "rnb": [
-        {"role": "lead", "instrument": "vocal_or_lead_synth", "register": "C4-B5", "pattern": "melisma_with_space"},
-        {"role": "harmony", "instrument": "electric_piano", "register": "C3-F5", "pattern": "lush_seventh_voicings"},
-        {"role": "bass", "instrument": "sub_bass", "register": "E1-C3", "pattern": "syncopated_glide"},
-        {"role": "texture", "instrument": "ambient_pad_or_guitar", "register": "G3-G5", "pattern": "counterphrases"},
-        {"role": "rhythm", "instrument": "drum_machine", "register": "full", "pattern": "laid_back_backbeat"},
+        {
+            "role": "lead",
+            "instrument": "vocal_or_lead_synth",
+            "register": "C4-B5",
+            "pattern": "melisma_with_space",
+        },
+        {
+            "role": "harmony",
+            "instrument": "electric_piano",
+            "register": "C3-F5",
+            "pattern": "lush_seventh_voicings",
+        },
+        {
+            "role": "bass",
+            "instrument": "sub_bass",
+            "register": "E1-C3",
+            "pattern": "syncopated_glide",
+        },
+        {
+            "role": "texture",
+            "instrument": "ambient_pad_or_guitar",
+            "register": "G3-G5",
+            "pattern": "counterphrases",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_machine",
+            "register": "full",
+            "pattern": "laid_back_backbeat",
+        },
     ],
     "edm": [
-        {"role": "lead", "instrument": "lead_synth_or_vocal_chop", "register": "C4-C6", "pattern": "hook_loop"},
-        {"role": "harmony", "instrument": "supersaw_or_pluck", "register": "C3-C5", "pattern": "sidechained_chords"},
-        {"role": "bass", "instrument": "sub_or_reese_bass", "register": "E1-C3", "pattern": "quarter_note_pulse"},
-        {"role": "texture", "instrument": "fx_and_risers", "register": "high", "pattern": "build_and_release"},
-        {"role": "rhythm", "instrument": "electronic_drums", "register": "full", "pattern": "four_on_floor"},
+        {
+            "role": "lead",
+            "instrument": "lead_synth_or_vocal_chop",
+            "register": "C4-C6",
+            "pattern": "hook_loop",
+        },
+        {
+            "role": "harmony",
+            "instrument": "supersaw_or_pluck",
+            "register": "C3-C5",
+            "pattern": "sidechained_chords",
+        },
+        {
+            "role": "bass",
+            "instrument": "sub_or_reese_bass",
+            "register": "E1-C3",
+            "pattern": "quarter_note_pulse",
+        },
+        {
+            "role": "texture",
+            "instrument": "fx_and_risers",
+            "register": "high",
+            "pattern": "build_and_release",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "electronic_drums",
+            "register": "full",
+            "pattern": "four_on_floor",
+        },
     ],
     "classical": [
-        {"role": "lead", "instrument": "strings_or_woodwinds", "register": "C4-A5", "pattern": "thematic_development"},
-        {"role": "harmony", "instrument": "strings_and_horns", "register": "C3-G5", "pattern": "functional_voice_leading"},
-        {"role": "bass", "instrument": "cello_and_double_bass", "register": "C2-E3", "pattern": "root_and_counterline"},
-        {"role": "texture", "instrument": "harp_or_inner_strings", "register": "C3-C6", "pattern": "ornamental_motion"},
-        {"role": "rhythm", "instrument": "timpani_or_orchestral_percussion", "register": "full", "pattern": "dynamic_accents"},
+        {
+            "role": "lead",
+            "instrument": "strings_or_woodwinds",
+            "register": "C4-A5",
+            "pattern": "thematic_development",
+        },
+        {
+            "role": "harmony",
+            "instrument": "strings_and_horns",
+            "register": "C3-G5",
+            "pattern": "functional_voice_leading",
+        },
+        {
+            "role": "bass",
+            "instrument": "cello_and_double_bass",
+            "register": "C2-E3",
+            "pattern": "root_and_counterline",
+        },
+        {
+            "role": "texture",
+            "instrument": "harp_or_inner_strings",
+            "register": "C3-C6",
+            "pattern": "ornamental_motion",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "timpani_or_orchestral_percussion",
+            "register": "full",
+            "pattern": "dynamic_accents",
+        },
     ],
     "blues": [
-        {"role": "lead", "instrument": "vocal_or_blues_guitar", "register": "C4-A5", "pattern": "call_and_response"},
-        {"role": "harmony", "instrument": "piano_or_guitar", "register": "C3-E5", "pattern": "dominant_voicing_comping"},
-        {"role": "bass", "instrument": "electric_or_upright_bass", "register": "E1-C3", "pattern": "shuffle_walk"},
-        {"role": "texture", "instrument": "organ_or_harmonica", "register": "G3-G5", "pattern": "fill_phrases"},
-        {"role": "rhythm", "instrument": "drum_kit", "register": "full", "pattern": "shuffle_backbeat"},
+        {
+            "role": "lead",
+            "instrument": "vocal_or_blues_guitar",
+            "register": "C4-A5",
+            "pattern": "call_and_response",
+        },
+        {
+            "role": "harmony",
+            "instrument": "piano_or_guitar",
+            "register": "C3-E5",
+            "pattern": "dominant_voicing_comping",
+        },
+        {
+            "role": "bass",
+            "instrument": "electric_or_upright_bass",
+            "register": "E1-C3",
+            "pattern": "shuffle_walk",
+        },
+        {
+            "role": "texture",
+            "instrument": "organ_or_harmonica",
+            "register": "G3-G5",
+            "pattern": "fill_phrases",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_kit",
+            "register": "full",
+            "pattern": "shuffle_backbeat",
+        },
     ],
     "folk": [
-        {"role": "lead", "instrument": "vocal", "register": "C4-A5", "pattern": "storytelling_phrase"},
-        {"role": "harmony", "instrument": "acoustic_guitar", "register": "C3-E5", "pattern": "open_strum_or_fingerpick"},
-        {"role": "bass", "instrument": "upright_bass", "register": "E1-C3", "pattern": "roots_with_walkups"},
-        {"role": "texture", "instrument": "mandolin_or_fiddle", "register": "G3-B5", "pattern": "light_countermelody"},
-        {"role": "rhythm", "instrument": "shaker_or_brush_percussion", "register": "full", "pattern": "gentle_pulse"},
+        {
+            "role": "lead",
+            "instrument": "vocal",
+            "register": "C4-A5",
+            "pattern": "storytelling_phrase",
+        },
+        {
+            "role": "harmony",
+            "instrument": "acoustic_guitar",
+            "register": "C3-E5",
+            "pattern": "open_strum_or_fingerpick",
+        },
+        {
+            "role": "bass",
+            "instrument": "upright_bass",
+            "register": "E1-C3",
+            "pattern": "roots_with_walkups",
+        },
+        {
+            "role": "texture",
+            "instrument": "mandolin_or_fiddle",
+            "register": "G3-B5",
+            "pattern": "light_countermelody",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "shaker_or_brush_percussion",
+            "register": "full",
+            "pattern": "gentle_pulse",
+        },
     ],
     "latin": [
-        {"role": "lead", "instrument": "vocal_or_flute", "register": "C4-B5", "pattern": "syncopated_hook"},
-        {"role": "harmony", "instrument": "piano_or_nylon_guitar", "register": "C3-F5", "pattern": "montuno_or_syncopated_chords"},
-        {"role": "bass", "instrument": "bass_guitar", "register": "E1-C3", "pattern": "tumbao"},
-        {"role": "texture", "instrument": "horns_or_aux_percussion", "register": "G3-C6", "pattern": "stabs_and_responses"},
-        {"role": "rhythm", "instrument": "latin_percussion_kit", "register": "full", "pattern": "clave_driven_groove"},
+        {
+            "role": "lead",
+            "instrument": "vocal_or_flute",
+            "register": "C4-B5",
+            "pattern": "syncopated_hook",
+        },
+        {
+            "role": "harmony",
+            "instrument": "piano_or_nylon_guitar",
+            "register": "C3-F5",
+            "pattern": "montuno_or_syncopated_chords",
+        },
+        {
+            "role": "bass",
+            "instrument": "bass_guitar",
+            "register": "E1-C3",
+            "pattern": "tumbao",
+        },
+        {
+            "role": "texture",
+            "instrument": "horns_or_aux_percussion",
+            "register": "G3-C6",
+            "pattern": "stabs_and_responses",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "latin_percussion_kit",
+            "register": "full",
+            "pattern": "clave_driven_groove",
+        },
     ],
     "country": [
-        {"role": "lead", "instrument": "vocal", "register": "C4-A5", "pattern": "lyric_forward_hook"},
-        {"role": "harmony", "instrument": "acoustic_and_electric_guitar", "register": "C3-E5", "pattern": "open_chords_and_picking"},
-        {"role": "bass", "instrument": "electric_bass", "register": "E1-C3", "pattern": "two_beat_root_fifth"},
-        {"role": "texture", "instrument": "pedal_steel_or_fiddle", "register": "G3-B5", "pattern": "answer_lines"},
-        {"role": "rhythm", "instrument": "drum_kit", "register": "full", "pattern": "train_beat_or_half_time"},
+        {
+            "role": "lead",
+            "instrument": "vocal",
+            "register": "C4-A5",
+            "pattern": "lyric_forward_hook",
+        },
+        {
+            "role": "harmony",
+            "instrument": "acoustic_and_electric_guitar",
+            "register": "C3-E5",
+            "pattern": "open_chords_and_picking",
+        },
+        {
+            "role": "bass",
+            "instrument": "electric_bass",
+            "register": "E1-C3",
+            "pattern": "two_beat_root_fifth",
+        },
+        {
+            "role": "texture",
+            "instrument": "pedal_steel_or_fiddle",
+            "register": "G3-B5",
+            "pattern": "answer_lines",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_kit",
+            "register": "full",
+            "pattern": "train_beat_or_half_time",
+        },
     ],
     "modal": [
-        {"role": "lead", "instrument": "lead_vocal_or_guitar", "register": "C4-A5", "pattern": "motif-loop"},
-        {"role": "harmony", "instrument": "rhodes_or_clav", "register": "C3-C5", "pattern": "syncopated_comping"},
-        {"role": "bass", "instrument": "finger_bass", "register": "E1-B2", "pattern": "groove_locked_to_kick"},
-        {"role": "rhythm", "instrument": "drum_kit", "register": "full", "pattern": "backbeat_with_ghost_notes"},
+        {
+            "role": "lead",
+            "instrument": "lead_vocal_or_guitar",
+            "register": "C4-A5",
+            "pattern": "motif-loop",
+        },
+        {
+            "role": "harmony",
+            "instrument": "rhodes_or_clav",
+            "register": "C3-C5",
+            "pattern": "syncopated_comping",
+        },
+        {
+            "role": "bass",
+            "instrument": "finger_bass",
+            "register": "E1-B2",
+            "pattern": "groove_locked_to_kick",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drum_kit",
+            "register": "full",
+            "pattern": "backbeat_with_ghost_notes",
+        },
     ],
     "jazz": [
-        {"role": "lead", "instrument": "lead_voice_or_horn", "register": "B3-G5", "pattern": "phrase-driven"},
-        {"role": "harmony", "instrument": "piano_or_guitar", "register": "C3-F5", "pattern": "shell_voicing_comping"},
-        {"role": "bass", "instrument": "upright_or_electric_bass", "register": "E1-C3", "pattern": "walking_or_half_note"},
-        {"role": "rhythm", "instrument": "drums", "register": "full", "pattern": "ride_hat_interaction"},
+        {
+            "role": "lead",
+            "instrument": "lead_voice_or_horn",
+            "register": "B3-G5",
+            "pattern": "phrase-driven",
+        },
+        {
+            "role": "harmony",
+            "instrument": "piano_or_guitar",
+            "register": "C3-F5",
+            "pattern": "shell_voicing_comping",
+        },
+        {
+            "role": "bass",
+            "instrument": "upright_or_electric_bass",
+            "register": "E1-C3",
+            "pattern": "walking_or_half_note",
+        },
+        {
+            "role": "rhythm",
+            "instrument": "drums",
+            "register": "full",
+            "pattern": "ride_hat_interaction",
+        },
     ],
 }
 
@@ -333,7 +598,9 @@ def get_section_pattern(section_type: str, style: str) -> dict[str, object]:
     try:
         with sqlite3.connect(str(KNOWLEDGE_DB_PATH)) as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(query, (normalized_section, normalized_style, normalized_style)).fetchone()
+            row = conn.execute(
+                query, (normalized_section, normalized_style, normalized_style)
+            ).fetchone()
     except sqlite3.Error:
         return {}
 
@@ -351,7 +618,9 @@ def get_section_pattern(section_type: str, style: str) -> dict[str, object]:
     return pattern
 
 
-def _expand_layout_lengths(layout: list[dict[str, object]], extra_bars: int, growth_order: tuple[int, ...]) -> None:
+def _expand_layout_lengths(
+    layout: list[dict[str, object]], extra_bars: int, growth_order: tuple[int, ...]
+) -> None:
     cursor = 0
     while extra_bars > 0:
         idx = growth_order[cursor % len(growth_order)]
@@ -360,7 +629,9 @@ def _expand_layout_lengths(layout: list[dict[str, object]], extra_bars: int, gro
         cursor += 1
 
 
-def _layout_to_sections(layout: list[dict[str, object]], style: str) -> list[dict[str, object]]:
+def _layout_to_sections(
+    layout: list[dict[str, object]], style: str
+) -> list[dict[str, object]]:
     sections: list[dict[str, object]] = []
     start_bar = 1
     for item in layout:
@@ -381,15 +652,26 @@ def _layout_to_sections(layout: list[dict[str, object]], style: str) -> list[dic
     return sections
 
 
-def _patterns_for_style(patterns: dict[str, dict[str, object]], style: str) -> dict[str, dict[str, object]]:
+def _patterns_for_style(
+    patterns: dict[str, dict[str, object]], style: str
+) -> dict[str, dict[str, object]]:
     style_prefix = f"{style}_"
-    return {name: payload for name, payload in patterns.items() if name.startswith(style_prefix)}
+    return {
+        name: payload
+        for name, payload in patterns.items()
+        if name.startswith(style_prefix)
+    }
 
 
 def _build_sections(bar_count: int, style: str) -> list[dict[str, object]]:
     if bar_count <= 4:
         return [
-            {"name": "A", "start_bar": 1, "end_bar": bar_count, "focus": "present_theme"},
+            {
+                "name": "A",
+                "start_bar": 1,
+                "end_bar": bar_count,
+                "focus": "present_theme",
+            },
         ]
 
     if bar_count >= 32:
@@ -416,12 +698,27 @@ def _build_sections(bar_count: int, style: str) -> list[dict[str, object]]:
 
     split = max(2, bar_count // 2)
     sections = [
-        {"name": "Verse_or_A", "start_bar": 1, "end_bar": split, "focus": "introduce_main_motif"},
-        {"name": "Chorus_or_B", "start_bar": split + 1, "end_bar": bar_count, "focus": "increase_density"},
+        {
+            "name": "Verse_or_A",
+            "start_bar": 1,
+            "end_bar": split,
+            "focus": "introduce_main_motif",
+        },
+        {
+            "name": "Chorus_or_B",
+            "start_bar": split + 1,
+            "end_bar": bar_count,
+            "focus": "increase_density",
+        },
     ]
     if style == "jazz" and bar_count >= 8:
         sections.append(
-            {"name": "Turnaround", "start_bar": max(1, bar_count - 1), "end_bar": bar_count, "focus": "set_next_cycle"}
+            {
+                "name": "Turnaround",
+                "start_bar": max(1, bar_count - 1),
+                "end_bar": bar_count,
+                "focus": "set_next_cycle",
+            }
         )
     return sections
 
@@ -432,19 +729,33 @@ def _mix_recommendations(style: str, melody_median_pitch: int) -> list[str]:
         "Automate section energy through instrumentation changes before heavy compression.",
     ]
     if melody_median_pitch <= 60:
-        recommendations.append("Melody sits low; high-pass harmony layers and avoid dense low-mid pads.")
+        recommendations.append(
+            "Melody sits low; high-pass harmony layers and avoid dense low-mid pads."
+        )
     else:
-        recommendations.append("Melody sits mid/high; carve 2-4kHz space in accompaniment.")
+        recommendations.append(
+            "Melody sits mid/high; carve 2-4kHz space in accompaniment."
+        )
     if style == "modal":
-        recommendations.append("Prioritize groove consistency; avoid over-harmonizing each beat.")
+        recommendations.append(
+            "Prioritize groove consistency; avoid over-harmonizing each beat."
+        )
     if style == "jazz":
-        recommendations.append("Guide tones (3rd/7th) should stay clear in comping voicings.")
+        recommendations.append(
+            "Guide tones (3rd/7th) should stay clear in comping voicings."
+        )
     if style == "edm":
-        recommendations.append("Reserve sub-bass headroom; sidechain non-drum low content to the kick.")
+        recommendations.append(
+            "Reserve sub-bass headroom; sidechain non-drum low content to the kick."
+        )
     if style == "rock":
-        recommendations.append("Balance guitars by role; avoid stacking identical distortion in the same register.")
+        recommendations.append(
+            "Balance guitars by role; avoid stacking identical distortion in the same register."
+        )
     if style == "classical":
-        recommendations.append("Keep orchestral doubling intentional; avoid masking melody in the midrange.")
+        recommendations.append(
+            "Keep orchestral doubling intentional; avoid masking melody in the midrange."
+        )
     return recommendations
 
 

@@ -5,16 +5,16 @@ from __future__ import annotations
 
 import re
 import sqlite3
-import sys
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from knowledge.brave_search import batch_search, search
-from knowledge.init_db import init_db
+try:
+    from knowledge.brave_search import batch_search, search
+    from knowledge.init_db import init_db
+except ModuleNotFoundError:
+    # Support direct execution: python3 knowledge/gen_arrangement_knowledge.py
+    from brave_search import batch_search, search  # type: ignore
+    from init_db import init_db  # type: ignore
 
 DB_PATH = Path(__file__).parent / "knowledge.db"
 SOURCE_PREFIX = "gen_arrangement_knowledge"
@@ -43,7 +43,9 @@ def dedupe_by_name(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return deduped
 
 
-def pick_best_result(results: list[dict[str, str]], keywords: list[str]) -> dict[str, str] | None:
+def pick_best_result(
+    results: list[dict[str, str]], keywords: list[str]
+) -> dict[str, str] | None:
     if not results:
         return None
     lowered = [k.casefold() for k in keywords]
@@ -623,7 +625,9 @@ def build_voice_records(brave_results: list[dict[str, str]]) -> list[dict[str, A
     return dedupe_by_name(rows)
 
 
-def build_arrangement_records(brave_results: list[dict[str, str]]) -> list[dict[str, Any]]:
+def build_arrangement_records(
+    brave_results: list[dict[str, str]],
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for item in ARRANGEMENT_HARDCODED:
         rows.append({**item, "source": f"{SOURCE_PREFIX}:hardcoded"})
@@ -680,7 +684,9 @@ def insert_search_log(
     )
 
 
-def run_brave_queries(queries: list[str], count: int = 10) -> tuple[list[dict[str, str]], dict[str, list[dict[str, str]]]]:
+def run_brave_queries(
+    queries: list[str], count: int = 10
+) -> tuple[list[dict[str, str]], dict[str, list[dict[str, str]]]]:
     grouped: dict[str, list[dict[str, str]]] = {}
     batched = batch_search(queries, count=count, delay=0.08)
     for query in queries:
@@ -710,7 +716,9 @@ def main() -> None:
 
     print("Running Brave searches...")
     voice_results, voice_grouped = run_brave_queries(VOICE_QUERIES, count=10)
-    arrangement_results, arrangement_grouped = run_brave_queries(ARRANGEMENT_QUERIES, count=10)
+    arrangement_results, arrangement_grouped = run_brave_queries(
+        ARRANGEMENT_QUERIES, count=10
+    )
     melody_results, melody_grouped = run_brave_queries(MELODY_QUERIES, count=10)
 
     voice_rows = build_voice_records(voice_results)
@@ -720,7 +728,9 @@ def main() -> None:
     if len(voice_rows) < 15:
         raise RuntimeError(f"voice_leading_rules insufficient rows: {len(voice_rows)}")
     if len(arrangement_rows) < 25:
-        raise RuntimeError(f"arrangement_techniques insufficient rows: {len(arrangement_rows)}")
+        raise RuntimeError(
+            f"arrangement_techniques insufficient rows: {len(arrangement_rows)}"
+        )
     if len(melody_rows) < 20:
         raise RuntimeError(f"melody_techniques insufficient rows: {len(melody_rows)}")
 

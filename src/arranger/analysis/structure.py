@@ -79,7 +79,10 @@ def _label_sections(section_stats: list[dict[str, Any]]) -> list[str]:
         last_idx = len(labels) - 1
         prev_energy = float(section_stats[last_idx - 1]["energy"])
         last_energy = float(section_stats[last_idx]["energy"])
-        if last_energy < prev_energy * 0.85 or float(section_stats[last_idx]["note_density"]) < 4:
+        if (
+            last_energy < prev_energy * 0.85
+            or float(section_stats[last_idx]["note_density"]) < 4
+        ):
             labels[last_idx] = "outro"
 
     return labels
@@ -113,11 +116,14 @@ def analyze_structure(
     section_ticks = bar_ticks * section_bars
 
     max_end_tick = max(
-        int(_safe_attr(n, "start_tick", 0)) + max(int(_safe_attr(n, "duration_tick", 0)), 0)
+        int(_safe_attr(n, "start_tick", 0))
+        + max(int(_safe_attr(n, "duration_tick", 0)), 0)
         for n in sorted_notes
     )
     if max_end_tick <= 0:
-        max_end_tick = max(int(_safe_attr(n, "start_tick", 0)) for n in sorted_notes) + 1
+        max_end_tick = (
+            max(int(_safe_attr(n, "start_tick", 0)) for n in sorted_notes) + 1
+        )
 
     num_sections = max(int(np.ceil(max_end_tick / section_ticks)), 1)
     sections: list[dict[str, Any]] = []
@@ -132,8 +138,12 @@ def analyze_structure(
         ]
 
         if in_section:
-            pitches = np.array([int(_safe_attr(n, "note_number", 60)) for n in in_section], dtype=float)
-            velocities = np.array([int(_safe_attr(n, "velocity", 64)) for n in in_section], dtype=float)
+            pitches = np.array(
+                [int(_safe_attr(n, "note_number", 60)) for n in in_section], dtype=float
+            )
+            velocities = np.array(
+                [int(_safe_attr(n, "velocity", 64)) for n in in_section], dtype=float
+            )
             avg_pitch = float(np.mean(pitches))
             energy = float(np.mean(velocities))
         else:
@@ -166,21 +176,27 @@ def analyze_structure(
     return sections
 
 
-def identify_strong_beats(notes: list[Note], ppq: int = 480, beats_per_bar: int = 4) -> list[int]:
+def identify_strong_beats(
+    notes: list[Note],
+    ppq: int = 480,
+    beats_per_bar: int = 4,
+    beat_unit: int = 4,
+) -> list[int]:
     """
     识别强拍（4/4 下第 1、3 拍）上的音高。
     Return note numbers that land on strong beats (beat 1 or 3 in 4/4).
 
-    强拍判定近似为 start_tick 对小节取模后接近 0 或 2*ppq。
-    Strong beat is approximated by bar-relative tick near 0 or 2*ppq.
+    强拍判定近似为 start_tick 对小节取模后接近第 1、3 拍位置。
+    Strong beat is approximated by bar-relative tick near beat 1 or 3.
     """
     if not notes:
         return []
 
-    bar_ticks = max(ppq * beats_per_bar, 1)
+    tick_per_beat = max(ppq * 4 // max(beat_unit, 1), 1)
+    bar_ticks = max(tick_per_beat * beats_per_bar, 1)
     beat1 = 0
-    beat3 = ppq * 2
-    tolerance = max(ppq // 8, 1)
+    beat3 = tick_per_beat * 2
+    tolerance = max(tick_per_beat // 8, 1)
 
     strong_notes: list[int] = []
     for note in notes:

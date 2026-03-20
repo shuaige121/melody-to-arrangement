@@ -15,11 +15,41 @@ def test_note_validation_accepts_valid_values():
 @pytest.mark.parametrize(
     "payload",
     [
-        {"note_number": 128, "velocity": 80, "start_tick": 0, "duration_tick": 120, "channel": 0},
-        {"note_number": 60, "velocity": 0, "start_tick": 0, "duration_tick": 120, "channel": 0},
-        {"note_number": 60, "velocity": 80, "start_tick": -1, "duration_tick": 120, "channel": 0},
-        {"note_number": 60, "velocity": 80, "start_tick": 0, "duration_tick": 0, "channel": 0},
-        {"note_number": 60, "velocity": 80, "start_tick": 0, "duration_tick": 120, "channel": 16},
+        {
+            "note_number": 128,
+            "velocity": 80,
+            "start_tick": 0,
+            "duration_tick": 120,
+            "channel": 0,
+        },
+        {
+            "note_number": 60,
+            "velocity": 0,
+            "start_tick": 0,
+            "duration_tick": 120,
+            "channel": 0,
+        },
+        {
+            "note_number": 60,
+            "velocity": 80,
+            "start_tick": -1,
+            "duration_tick": 120,
+            "channel": 0,
+        },
+        {
+            "note_number": 60,
+            "velocity": 80,
+            "start_tick": 0,
+            "duration_tick": 0,
+            "channel": 0,
+        },
+        {
+            "note_number": 60,
+            "velocity": 80,
+            "start_tick": 0,
+            "duration_tick": 120,
+            "channel": 16,
+        },
     ],
 )
 def test_note_validation_rejects_invalid_values(payload):
@@ -28,7 +58,9 @@ def test_note_validation_rejects_invalid_values(payload):
 
 
 def test_note_model_copy_keeps_original_intact():
-    original = Note(note_number=60, velocity=80, start_tick=0, duration_tick=480, channel=0)
+    original = Note(
+        note_number=60, velocity=80, start_tick=0, duration_tick=480, channel=0
+    )
     copied = original.model_copy(update={"note_number": 62})
 
     assert original.note_number == 60

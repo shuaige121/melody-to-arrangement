@@ -256,11 +256,35 @@ def generate_chord_types() -> list[dict[str, str]]:
         ("dom7", "7", [0, 4, 7, 10], "seventh", "Dominant seventh chord."),
         ("maj7", "maj7", [0, 4, 7, 11], "seventh", "Major seventh chord."),
         ("min7", "m7", [0, 3, 7, 10], "seventh", "Minor seventh chord."),
-        ("min(maj7)", "m(maj7)", [0, 3, 7, 11], "seventh", "Minor-major seventh chord."),
+        (
+            "min(maj7)",
+            "m(maj7)",
+            [0, 3, 7, 11],
+            "seventh",
+            "Minor-major seventh chord.",
+        ),
         ("dim7", "dim7", [0, 3, 6, 9], "seventh", "Fully diminished seventh chord."),
-        ("half-dim7(m7b5)", "m7b5", [0, 3, 6, 10], "seventh", "Half-diminished seventh chord."),
-        ("aug7", "7#5", [0, 4, 8, 10], "seventh", "Dominant seventh with augmented fifth."),
-        ("augmaj7", "maj7#5", [0, 4, 8, 11], "seventh", "Major seventh with augmented fifth."),
+        (
+            "half-dim7(m7b5)",
+            "m7b5",
+            [0, 3, 6, 10],
+            "seventh",
+            "Half-diminished seventh chord.",
+        ),
+        (
+            "aug7",
+            "7#5",
+            [0, 4, 8, 10],
+            "seventh",
+            "Dominant seventh with augmented fifth.",
+        ),
+        (
+            "augmaj7",
+            "maj7#5",
+            [0, 4, 8, 11],
+            "seventh",
+            "Major seventh with augmented fifth.",
+        ),
         ("6", "6", [0, 4, 7, 9], "sixth", "Major sixth chord."),
         ("min6", "m6", [0, 3, 7, 9], "sixth", "Minor sixth chord."),
         ("9", "9", [0, 4, 7, 10, 14], "ninth", "Dominant ninth chord."),
@@ -269,24 +293,114 @@ def generate_chord_types() -> list[dict[str, str]]:
         ("add9", "add9", [0, 4, 7, 14], "ninth", "Major triad with added ninth."),
         ("11", "11", [0, 4, 7, 10, 14, 17], "eleventh", "Dominant eleventh chord."),
         ("min11", "m11", [0, 3, 7, 10, 14, 17], "eleventh", "Minor eleventh chord."),
-        ("13", "13", [0, 4, 7, 10, 14, 17, 21], "thirteenth", "Dominant thirteenth chord."),
-        ("maj13", "maj13", [0, 4, 7, 11, 14, 17, 21], "thirteenth", "Major thirteenth chord."),
-        ("min13", "m13", [0, 3, 7, 10, 14, 17, 21], "thirteenth", "Minor thirteenth chord."),
+        (
+            "13",
+            "13",
+            [0, 4, 7, 10, 14, 17, 21],
+            "thirteenth",
+            "Dominant thirteenth chord.",
+        ),
+        (
+            "maj13",
+            "maj13",
+            [0, 4, 7, 11, 14, 17, 21],
+            "thirteenth",
+            "Major thirteenth chord.",
+        ),
+        (
+            "min13",
+            "m13",
+            [0, 3, 7, 10, 14, 17, 21],
+            "thirteenth",
+            "Minor thirteenth chord.",
+        ),
         ("7#5", "7#5", [0, 4, 8, 10], "altered", "Dominant seventh with sharp five."),
         ("7b5", "7b5", [0, 4, 6, 10], "altered", "Dominant seventh with flat five."),
-        ("7#9", "7#9", [0, 4, 7, 10, 15], "altered", "Dominant seventh with sharp nine."),
-        ("7b9", "7b9", [0, 4, 7, 10, 13], "altered", "Dominant seventh with flat nine."),
-        ("7#11", "7#11", [0, 4, 7, 10, 18], "altered", "Dominant seventh with sharp eleven."),
+        (
+            "7#9",
+            "7#9",
+            [0, 4, 7, 10, 15],
+            "altered",
+            "Dominant seventh with sharp nine.",
+        ),
+        (
+            "7b9",
+            "7b9",
+            [0, 4, 7, 10, 13],
+            "altered",
+            "Dominant seventh with flat nine.",
+        ),
+        (
+            "7#11",
+            "7#11",
+            [0, 4, 7, 10, 18],
+            "altered",
+            "Dominant seventh with sharp eleven.",
+        ),
         ("5", "5", [0, 7], "power", "Power chord (root and fifth)."),
-        ("6/9", "6/9", [0, 4, 7, 9, 14], "extended", "Major sixth chord with added ninth."),
-        ("min6/9", "m6/9", [0, 3, 7, 9, 14], "extended", "Minor sixth chord with added ninth."),
-        ("7sus4", "7sus4", [0, 5, 7, 10], "suspended", "Dominant seventh with suspended fourth."),
-        ("9sus4", "9sus4", [0, 5, 7, 10, 14], "suspended", "Dominant ninth with suspended fourth."),
-        ("maj7#11", "maj7#11", [0, 4, 7, 11, 18], "extended", "Major seventh chord with sharp eleven."),
-        ("add11", "add11", [0, 4, 7, 17], "added-tone", "Major triad with added eleventh."),
-        ("minadd9", "madd9", [0, 3, 7, 14], "added-tone", "Minor triad with added ninth."),
-        ("7b13", "7b13", [0, 4, 7, 10, 20], "altered", "Dominant seventh with flat thirteen."),
-        ("7alt", "7alt", [0, 4, 7, 10, 13, 15], "altered", "Dominant altered shell including b9 and #9."),
+        (
+            "6/9",
+            "6/9",
+            [0, 4, 7, 9, 14],
+            "extended",
+            "Major sixth chord with added ninth.",
+        ),
+        (
+            "min6/9",
+            "m6/9",
+            [0, 3, 7, 9, 14],
+            "extended",
+            "Minor sixth chord with added ninth.",
+        ),
+        (
+            "7sus4",
+            "7sus4",
+            [0, 5, 7, 10],
+            "suspended",
+            "Dominant seventh with suspended fourth.",
+        ),
+        (
+            "9sus4",
+            "9sus4",
+            [0, 5, 7, 10, 14],
+            "suspended",
+            "Dominant ninth with suspended fourth.",
+        ),
+        (
+            "maj7#11",
+            "maj7#11",
+            [0, 4, 7, 11, 18],
+            "extended",
+            "Major seventh chord with sharp eleven.",
+        ),
+        (
+            "add11",
+            "add11",
+            [0, 4, 7, 17],
+            "added-tone",
+            "Major triad with added eleventh.",
+        ),
+        (
+            "minadd9",
+            "madd9",
+            [0, 3, 7, 14],
+            "added-tone",
+            "Minor triad with added ninth.",
+        ),
+        (
+            "7b13",
+            "7b13",
+            [0, 4, 7, 10, 20],
+            "altered",
+            "Dominant seventh with flat thirteen.",
+        ),
+        (
+            "7alt",
+            "7alt",
+            [0, 4, 7, 10, 13, 15],
+            "altered",
+            "Dominant altered shell including b9 and #9.",
+        ),
     ]
 
     return [
@@ -579,7 +693,9 @@ def generate_instrumentation() -> list[dict[str, str | int]]:
             }
         )
 
-    drum_summary = "; ".join(f"{note}:{drum}" for note, drum in sorted(DRUM_NOTE_MAP.items()))
+    drum_summary = "; ".join(
+        f"{note}:{drum}" for note, drum in sorted(DRUM_NOTE_MAP.items())
+    )
     instruments.append(
         {
             "name": "GM Drum Map (Channel 10)",
@@ -676,7 +792,9 @@ def write_data(db_path: Path) -> None:
 
     table_counts = {}
     for table in ("scales_modes", "chord_types", "instrumentation"):
-        table_counts[table] = cursor.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        table_counts[table] = cursor.execute(
+            f"SELECT COUNT(*) FROM {table}"
+        ).fetchone()[0]
 
     conn.close()
 

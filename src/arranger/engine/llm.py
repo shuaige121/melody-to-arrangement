@@ -122,7 +122,9 @@ def _sanitize_choice(value: Any, valid_choices: list[str], default: str) -> str:
     return default
 
 
-def _sanitize_energy_curve(raw_value: Any, fallback: list[str], count: int) -> list[str]:
+def _sanitize_energy_curve(
+    raw_value: Any, fallback: list[str], count: int
+) -> list[str]:
     if isinstance(raw_value, str):
         source = [piece.strip() for piece in raw_value.replace("|", ",").split(",")]
     elif isinstance(raw_value, list):
@@ -200,7 +202,9 @@ def _coerce_strategy_payload(
     )
 
 
-def _call_llm_router(analysis: AnalysisResult, style: str, mood: str) -> dict[str, Any] | None:
+def _call_llm_router(
+    analysis: AnalysisResult, style: str, mood: str
+) -> dict[str, Any] | None:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key or not HAS_ANTHROPIC:
         return None
@@ -222,7 +226,9 @@ def _call_llm_router(analysis: AnalysisResult, style: str, mood: str) -> dict[st
     return _extract_json_object(_extract_response_text(response))
 
 
-def _fallback_strategy(analysis: AnalysisResult, style: str, mood: str) -> ArrangementStrategy:
+def _fallback_strategy(
+    analysis: AnalysisResult, style: str, mood: str
+) -> ArrangementStrategy:
     """
     Pure rule-based: pick default patterns based on style.
     This ensures the system works WITHOUT any API key.
@@ -244,7 +250,9 @@ def _fallback_strategy(analysis: AnalysisResult, style: str, mood: str) -> Arran
     )
 
 
-def get_strategy(analysis: AnalysisResult, style: str, mood: str) -> ArrangementStrategy:
+def get_strategy(
+    analysis: AnalysisResult, style: str, mood: str
+) -> ArrangementStrategy:
     """
     Try Claude API strategy routing first; fallback to rule-based defaults on failure.
     """

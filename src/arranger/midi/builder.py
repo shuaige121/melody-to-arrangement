@@ -31,7 +31,9 @@ def _sort_note_key(note: Note) -> tuple[int, int, int]:
     )
 
 
-def notes_to_track(notes: list[Note], channel: int, program: int, track_name: str) -> mido.MidiTrack:
+def notes_to_track(
+    notes: list[Note], channel: int, program: int, track_name: str
+) -> mido.MidiTrack:
     """
     将 Note 列表转换为 MIDI 轨道消息，输入为 absolute tick，输出为 delta tick。
     """
@@ -41,7 +43,11 @@ def notes_to_track(notes: list[Note], channel: int, program: int, track_name: st
     midi_program = _clamp(_as_int(program, 0), 0, 127)
 
     track.append(mido.MetaMessage("track_name", name=str(track_name), time=0))
-    track.append(mido.Message("program_change", program=midi_program, channel=midi_channel, time=0))
+    track.append(
+        mido.Message(
+            "program_change", program=midi_program, channel=midi_channel, time=0
+        )
+    )
 
     events: list[tuple[int, int, int, mido.Message]] = []
     for note in notes or []:
@@ -97,16 +103,28 @@ def build_midi(arrangement: Arrangement, output_path: str) -> str:
     tempo_track.append(mido.MetaMessage("track_name", name="tempo", time=0))
 
     tempo_bpm = float(getattr(arrangement, "tempo", 120) or 120)
-    tempo_track.append(mido.MetaMessage("set_tempo", tempo=int(mido.bpm2tempo(tempo_bpm)), time=0))
+    tempo_track.append(
+        mido.MetaMessage("set_tempo", tempo=int(mido.bpm2tempo(tempo_bpm)), time=0)
+    )
 
     time_sig = getattr(arrangement, "time_sig", (4, 4)) or (4, 4)
     numerator = max(1, _as_int(time_sig[0] if len(time_sig) > 0 else 4, 4))
     denominator = max(1, _as_int(time_sig[1] if len(time_sig) > 1 else 4, 4))
     tempo_track.append(
-        mido.MetaMessage("time_signature", numerator=numerator, denominator=denominator, clocks_per_click=24, time=0)
+        mido.MetaMessage(
+            "time_signature",
+            numerator=numerator,
+            denominator=denominator,
+            clocks_per_click=24,
+            time=0,
+        )
     )
 
-    key_sig = getattr(arrangement, "key_sig", None) or getattr(arrangement, "key_signature", None) or "C"
+    key_sig = (
+        getattr(arrangement, "key_sig", None)
+        or getattr(arrangement, "key_signature", None)
+        or "C"
+    )
     try:
         tempo_track.append(mido.MetaMessage("key_signature", key=str(key_sig), time=0))
     except (TypeError, ValueError):
@@ -139,7 +157,16 @@ if __name__ == "__main__":
     from arranger.models.note import Note
     from arranger.models.arrangement import Arrangement, Track
 
-    notes = [Note(note_number=60 + i, velocity=80, start_tick=i * 480, duration_tick=480, channel=0) for i in range(4)]
+    notes = [
+        Note(
+            note_number=60 + i,
+            velocity=80,
+            start_tick=i * 480,
+            duration_tick=480,
+            channel=0,
+        )
+        for i in range(4)
+    ]
     arr = Arrangement(
         tracks=[Track(name="piano", channel=0, program=0, notes=notes)],
         tempo=120,

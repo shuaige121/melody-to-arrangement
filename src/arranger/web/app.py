@@ -73,7 +73,9 @@ def _build_midi_payload(path: Path) -> dict:
     _, metadata = parse_midi(str(path))
     melody_notes = extract_melody_track(str(path))
     if not melody_notes:
-        raise HTTPException(status_code=400, detail="No melody notes found in uploaded MIDI")
+        raise HTTPException(
+            status_code=400, detail="No melody notes found in uploaded MIDI"
+        )
 
     tempo_microseconds = int(metadata.get("tempo", 500000))
     ppq = max(1, int(metadata.get("ppq", 480)))
@@ -91,7 +93,9 @@ def _build_midi_payload(path: Path) -> dict:
         "ok": True,
         "status": "ok",
         "filename": path.name,
-        "notes": [_note_to_event(note, ppq, tempo_microseconds) for note in melody_notes],
+        "notes": [
+            _note_to_event(note, ppq, tempo_microseconds) for note in melody_notes
+        ],
         "tempo_bpm": tempo_bpm,
         "time_signature": _time_signature_string(time_sig),
         "summary": {
@@ -117,7 +121,9 @@ async def upload_midi(file: UploadFile = File(...)):
     upload_path = _persist_upload(file)
     try:
         if upload_path.suffix.lower() not in MIDI_SUFFIXES:
-            raise HTTPException(status_code=400, detail="Only .mid and .midi files are supported")
+            raise HTTPException(
+                status_code=400, detail="Only .mid and .midi files are supported"
+            )
         payload = _build_midi_payload(upload_path)
         payload["filename"] = file.filename or upload_path.name
         return payload
@@ -153,7 +159,9 @@ async def arrange(
 
     try:
         if input_path.suffix.lower() not in MIDI_SUFFIXES:
-            raise HTTPException(status_code=400, detail="Arrangement input must be a MIDI file")
+            raise HTTPException(
+                status_code=400, detail="Arrangement input must be a MIDI file"
+            )
 
         arrange_melody(
             input_path=str(input_path),

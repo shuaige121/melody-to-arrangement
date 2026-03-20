@@ -86,7 +86,9 @@ def _bars_span(notes: list[Note], ppq: int, time_sig: tuple[int, int]) -> float:
         return 1.0
     numerator, denominator = time_sig
     bar_ticks = max(int(round(ppq * numerator * (4.0 / denominator))), 1)
-    start_ticks = np.array([int(_safe_attr(n, "start_tick", 0)) for n in notes], dtype=float)
+    start_ticks = np.array(
+        [int(_safe_attr(n, "start_tick", 0)) for n in notes], dtype=float
+    )
     end_ticks = np.array(
         [
             int(_safe_attr(n, "start_tick", 0))
@@ -135,7 +137,9 @@ def _estimate_tempo(notes: list[Note], notes_per_bar: float) -> int:
         except (TypeError, ValueError):
             pass
 
-    starts = np.array(sorted(int(_safe_attr(n, "start_tick", 0)) for n in notes), dtype=float)
+    starts = np.array(
+        sorted(int(_safe_attr(n, "start_tick", 0)) for n in notes), dtype=float
+    )
     if starts.size > 1:
         ioi = np.diff(starts)
         ioi = ioi[ioi > 0]
@@ -182,7 +186,9 @@ def _detect_key(notes: list[Note]) -> str:
         return "C_major"
 
     pitch_classes = [int(_safe_attr(note, "note_number", 60)) % 12 for note in notes]
-    histogram = np.bincount(np.array(pitch_classes, dtype=int), minlength=12).astype(float)
+    histogram = np.bincount(np.array(pitch_classes, dtype=int), minlength=12).astype(
+        float
+    )
 
     best_score = float("-inf")
     best_key = "C_major"
@@ -226,9 +232,13 @@ def _coerce_analysis_result(payload: dict[str, Any]) -> AnalysisResult:
         if "time_sig" in model_fields:
             data.setdefault("time_sig", payload["time_sig"])
         if "time_signature" in model_fields:
-            data.setdefault("time_signature", payload["time_signature"])
+            time_signature = payload.get("time_signature")
+            if time_signature is not None:
+                data.setdefault("time_signature", time_signature)
         if "note_density" in model_fields:
-            data.setdefault("note_density", payload["note_density"])
+            note_density = payload.get("note_density")
+            if note_density is not None:
+                data.setdefault("note_density", note_density)
         if "melody_density" in model_fields:
             data.setdefault("melody_density", payload["melody_density"])
         if "melody_range" in model_fields:
@@ -267,22 +277,37 @@ def analyze_melody(
     Returns:
         AnalysisResult: 包含 key/tempo/time signature/range/density/sections 等信息。
     """
-    resolved_time_sig = _normalize_time_signature(time_sig) if time_sig is not None else _resolve_time_signature(notes)
+    resolved_time_sig = (
+        _normalize_time_signature(time_sig)
+        if time_sig is not None
+        else _resolve_time_signature(notes)
+    )
     resolved_ppq = _normalize_ppq(ppq)
 
     notes_per_bar = _density_value(notes, ppq=resolved_ppq, time_sig=resolved_time_sig)
-    total_bars = int(np.ceil(_bars_span(notes, ppq=resolved_ppq, time_sig=resolved_time_sig)))
+    total_bars = int(
+        np.ceil(_bars_span(notes, ppq=resolved_ppq, time_sig=resolved_time_sig))
+    )
     key_name = _detect_key(notes)
     tempo = _normalize_tempo_bpm(tempo_bpm) or _estimate_tempo(notes, notes_per_bar)
 
     if notes:
-        pitches = np.array([int(_safe_attr(n, "note_number", 60)) for n in notes], dtype=int)
+        pitches = np.array(
+            [int(_safe_attr(n, "note_number", 60)) for n in notes], dtype=int
+        )
         melody_range = (int(pitches.min()), int(pitches.max()))
     else:
         melody_range = (0, 0)
 
-    sections = analyze_structure(notes, tempo=tempo, time_sig=resolved_time_sig, ppq=resolved_ppq)
-    strong_beats = identify_strong_beats(notes, ppq=resolved_ppq, beats_per_bar=resolved_time_sig[0])
+    sections = analyze_structure(
+        notes, tempo=tempo, time_sig=resolved_time_sig, ppq=resolved_ppq
+    )
+    strong_beats = identify_strong_beats(
+        notes,
+        ppq=resolved_ppq,
+        beats_per_bar=resolved_time_sig[0],
+        beat_unit=resolved_time_sig[1],
+    )
 
     payload: dict[str, Any] = {
         "key": key_name,

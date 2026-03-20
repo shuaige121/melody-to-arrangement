@@ -108,12 +108,15 @@ QUERIES = {
     ],
 }
 
+
 def main():
     out_dir = Path(__file__).parent / "search_results"
     out_dir.mkdir(exist_ok=True)
 
     total = sum(len(v) for v in QUERIES.values())
-    print(f"Running {total} queries across {len(QUERIES)} categories...", file=sys.stderr)
+    print(
+        f"Running {total} queries across {len(QUERIES)} categories...", file=sys.stderr
+    )
 
     for category, queries in QUERIES.items():
         print(f"\n--- {category} ({len(queries)} queries) ---", file=sys.stderr)

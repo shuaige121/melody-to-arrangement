@@ -60,7 +60,9 @@ def _tempo_bpm_from_metadata(metadata: dict[str, Any]) -> int | None:
 
 
 def _parse_progression_symbols(progression_style: str) -> list[str]:
-    symbols = [piece.strip() for piece in (progression_style or "").split("-") if piece.strip()]
+    symbols = [
+        piece.strip() for piece in (progression_style or "").split("-") if piece.strip()
+    ]
     return symbols or ["I", "V", "vi", "IV"]
 
 
@@ -71,15 +73,23 @@ def _resolve_drum_pattern(style_name: str) -> dict[str, Any]:
     return DRUM_PATTERNS[first_key]
 
 
-def _build_drum_track(pattern: dict[str, Any], bars: int, ppq: int, time_sig: tuple[int, int]) -> list[Note]:
+def _build_drum_track(
+    pattern: dict[str, Any], bars: int, ppq: int, time_sig: tuple[int, int]
+) -> list[Note]:
     ticks_per_bar = bar_ticks(ppq, time_sig)
     notes: list[Note] = []
     for bar_idx in range(max(1, bars)):
-        notes.extend(drum_pattern_to_notes(pattern, bar_idx * ticks_per_bar, ppq, time_sig=time_sig))
+        notes.extend(
+            drum_pattern_to_notes(
+                pattern, bar_idx * ticks_per_bar, ppq, time_sig=time_sig
+            )
+        )
     return notes
 
 
-def _validate_track_notes(notes: list[Note], analysis: Any, strategy: Any, track_name: str) -> list[Note]:
+def _validate_track_notes(
+    notes: list[Note], analysis: Any, strategy: Any, track_name: str
+) -> list[Note]:
     if validate_and_fix is None:
         return notes
 
@@ -99,28 +109,10 @@ def _validate_track_notes(notes: list[Note], analysis: Any, strategy: Any, track
         except Exception:
             guardrails = None
 
-    call_attempts = [
-        {"kwargs": {"notes": notes, "guardrails": guardrails, "track_name": track_name}},
-        {"kwargs": {"notes": notes, "guardrails": guardrails}},
-        {"kwargs": {"notes": notes}},
-        {"args": (notes, guardrails, track_name)},
-        {"args": (notes, guardrails)},
-        {"args": (notes,)},
-    ]
-    for attempt in call_attempts:
-        try:
-            if "kwargs" in attempt:
-                result = validate_and_fix(**attempt["kwargs"])
-            else:
-                result = validate_and_fix(*attempt["args"])
-            if isinstance(result, list):
-                return result
-        except TypeError:
-            continue
-        except Exception:
-            return notes
+    if guardrails is None:
+        return notes
 
-    return notes
+    return validate_and_fix(notes, guardrails, chord_notes=None)
 
 
 def arrange_melody(
@@ -165,13 +157,33 @@ def arrange_melody(
     total_bars = max(1, int(getattr(analysis, "total_bars", 1) or 1))
 
     drum_pattern = _resolve_drum_pattern(strategy.drum_style)
-    drum_notes = _build_drum_track(pattern=drum_pattern, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
-    bass_notes = generate_bass_line(chords=chords, style=strategy.bass_style, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
-    piano_notes = generate_piano_comp(chords=chords, style=strategy.piano_style, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig)
+    drum_notes = _build_drum_track(
+        pattern=drum_pattern, bars=total_bars, ppq=ppq, time_sig=metadata_time_sig
+    )
+    bass_notes = generate_bass_line(
+        chords=chords,
+        style=strategy.bass_style,
+        bars=total_bars,
+        ppq=ppq,
+        time_sig=metadata_time_sig,
+    )
+    piano_notes = generate_piano_comp(
+        chords=chords,
+        style=strategy.piano_style,
+        bars=total_bars,
+        ppq=ppq,
+        time_sig=metadata_time_sig,
+    )
 
-    drum_notes = _validate_track_notes(drum_notes, analysis=analysis, strategy=strategy, track_name="drums")
-    bass_notes = _validate_track_notes(bass_notes, analysis=analysis, strategy=strategy, track_name="bass")
-    piano_notes = _validate_track_notes(piano_notes, analysis=analysis, strategy=strategy, track_name="piano")
+    drum_notes = _validate_track_notes(
+        drum_notes, analysis=analysis, strategy=strategy, track_name="drums"
+    )
+    bass_notes = _validate_track_notes(
+        bass_notes, analysis=analysis, strategy=strategy, track_name="bass"
+    )
+    piano_notes = _validate_track_notes(
+        piano_notes, analysis=analysis, strategy=strategy, track_name="piano"
+    )
 
     arrangement = Arrangement(
         tracks=[
@@ -189,7 +201,9 @@ def arrange_melody(
             "key": analysis.key,
             "requested_style": style,
             "requested_mood": mood,
-            "strategy": strategy.model_dump() if hasattr(strategy, "model_dump") else dict(strategy),
+            "strategy": strategy.model_dump()
+            if hasattr(strategy, "model_dump")
+            else dict(strategy),
         },
     )
     return build_midi(arrangement=arrangement, output_path=output_path)

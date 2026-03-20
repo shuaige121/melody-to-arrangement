@@ -634,7 +634,9 @@ TOKEN_RE = re.compile(rf"^{ROMAN_TOKEN_PATTERN}$")
 DASHED_PROGRESS_RE = re.compile(
     rf"({ROMAN_TOKEN_PATTERN}(?:\s*[-\u2013\u2014>/|:]\s*{ROMAN_TOKEN_PATTERN}){{2,11}})"
 )
-SPACED_PROGRESS_RE = re.compile(rf"({ROMAN_TOKEN_PATTERN}(?:\s+{ROMAN_TOKEN_PATTERN}){{2,11}})")
+SPACED_PROGRESS_RE = re.compile(
+    rf"({ROMAN_TOKEN_PATTERN}(?:\s+{ROMAN_TOKEN_PATTERN}){{2,11}})"
+)
 SEPARATOR_RE = re.compile(r"[\s,;\.\-\u2013\u2014>/|:]+")
 
 
@@ -659,7 +661,11 @@ def canonicalize_token(token: str) -> str:
 
 
 def normalize_progression(raw: str) -> str | None:
-    parts = [p for p in SEPARATOR_RE.split(raw.replace("\u2014", "-").replace("\u2013", "-")) if p]
+    parts = [
+        p
+        for p in SEPARATOR_RE.split(raw.replace("\u2014", "-").replace("\u2013", "-"))
+        if p
+    ]
     tokens: list[str] = []
     for part in parts:
         token = canonicalize_token(part)
@@ -716,16 +722,32 @@ def infer_bars(style: str, roman: str) -> int:
 
 def infer_energy(style: str, text_blob: str) -> str:
     lowered = text_blob.lower()
-    if any(word in lowered for word in ("drop", "dance", "anthem", "festival", "driving", "aggressive", "upbeat")):
+    if any(
+        word in lowered
+        for word in (
+            "drop",
+            "dance",
+            "anthem",
+            "festival",
+            "driving",
+            "aggressive",
+            "upbeat",
+        )
+    ):
         return "high"
-    if any(word in lowered for word in ("ballad", "soft", "gentle", "slow", "sad", "chill", "ambient")):
+    if any(
+        word in lowered
+        for word in ("ballad", "soft", "gentle", "slow", "sad", "chill", "ambient")
+    ):
         return "low"
     return DEFAULT_ENERGY_BY_STYLE.get(style, "medium")
 
 
 def guess_examples(title: str, description: str) -> str:
     blob = f"{title} {description}"
-    quoted = re.findall(r'["\u201c\u201d\']([^"\u201c\u201d\']{2,60})["\u201c\u201d\']', blob)
+    quoted = re.findall(
+        r'["\u201c\u201d\']([^"\u201c\u201d\']{2,60})["\u201c\u201d\']', blob
+    )
     if quoted:
         picked = []
         for item in quoted:
@@ -759,7 +781,9 @@ def make_record(
 
     computed_mode = mode or infer_mode(style, normalized)
     computed_bars = bars or infer_bars(style, normalized)
-    computed_energy = energy_level or infer_energy(style, f"{description} {name} {normalized}")
+    computed_energy = energy_level or infer_energy(
+        style, f"{description} {name} {normalized}"
+    )
 
     if computed_energy not in {"low", "medium", "high"}:
         computed_energy = "medium"
@@ -846,8 +870,7 @@ def gather_search_records() -> list[dict]:
 
 def build_offline_supplement(limit: int, existing_records: list[dict]) -> list[dict]:
     existing_keys = {
-        (r["style"], r["roman_numerals"], r["mode"])
-        for r in existing_records
+        (r["style"], r["roman_numerals"], r["mode"]) for r in existing_records
     }
 
     supplement: list[dict] = []
@@ -939,13 +962,17 @@ def main() -> int:
 
     if len(all_records) < TARGET_TOTAL:
         extra_needed = TARGET_TOTAL - len(all_records)
-        all_records = dedupe_records(all_records + build_offline_supplement(extra_needed, all_records))
+        all_records = dedupe_records(
+            all_records + build_offline_supplement(extra_needed, all_records)
+        )
 
     total, style_counts = insert_records(all_records)
 
     by_source = Counter(
-        "hardcoded" if r["source"].startswith("hardcoded")
-        else "brave" if r["source"].startswith("http")
+        "hardcoded"
+        if r["source"].startswith("hardcoded")
+        else "brave"
+        if r["source"].startswith("http")
         else "fallback"
         for r in all_records
     )

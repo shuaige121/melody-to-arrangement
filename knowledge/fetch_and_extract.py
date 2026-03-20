@@ -18,17 +18,20 @@ EXTRACTED_DIR.mkdir(exist_ok=True)
 def fetch_page_text(url: str, timeout: int = 10) -> str:
     """Fetch a page and return text content (basic HTML stripping)."""
     try:
-        resp = requests.get(url, timeout=timeout, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; MusicResearchBot/1.0)"
-        })
+        resp = requests.get(
+            url,
+            timeout=timeout,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; MusicResearchBot/1.0)"},
+        )
         resp.raise_for_status()
         text = resp.text
         # Basic HTML to text
         import re
-        text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL)
-        text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL)
-        text = re.sub(r'<[^>]+>', ' ', text)
-        text = re.sub(r'\s+', ' ', text).strip()
+
+        text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.DOTALL)
+        text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
         return text[:5000]  # First 5000 chars
     except Exception as e:
         return f"FETCH_ERROR: {e}"
@@ -54,13 +57,36 @@ def select_top_results(results: list[dict], max_per_category: int = 15) -> list[
         score = 0
         desc = (r.get("description", "") + " " + r.get("title", "")).lower()
         # Boost educational/analytical content
-        for keyword in ["theory", "analysis", "technique", "arrangement", "chord", "progression",
-                       "pattern", "instrument", "melody", "harmony", "emotion", "mood",
-                       "breakdown", "structure", "例", "分析", "教程"]:
+        for keyword in [
+            "theory",
+            "analysis",
+            "technique",
+            "arrangement",
+            "chord",
+            "progression",
+            "pattern",
+            "instrument",
+            "melody",
+            "harmony",
+            "emotion",
+            "mood",
+            "breakdown",
+            "structure",
+            "例",
+            "分析",
+            "教程",
+        ]:
             if keyword in desc:
                 score += 1
         # Penalize commercial/irrelevant
-        for keyword in ["buy", "subscribe", "login", "sign up", "pricing", "free trial"]:
+        for keyword in [
+            "buy",
+            "subscribe",
+            "login",
+            "sign up",
+            "pricing",
+            "free trial",
+        ]:
             if keyword in desc:
                 score -= 2
         scored.append((score, r))
@@ -69,8 +95,13 @@ def select_top_results(results: list[dict], max_per_category: int = 15) -> list[
 
 
 def main():
-    categories = ["mood_music", "melody_accompaniment", "section_patterns",
-                  "song_analysis", "tension_energy"]
+    categories = [
+        "mood_music",
+        "melody_accompaniment",
+        "section_patterns",
+        "song_analysis",
+        "tension_energy",
+    ]
 
     for category in categories:
         src = RESULTS_DIR / f"{category}.json"
@@ -84,20 +115,24 @@ def main():
 
         enriched = []
         for i, r in enumerate(top):
-            print(f"  [{i+1}/{len(top)}] {r['url'][:80]}...", file=sys.stderr)
+            print(f"  [{i + 1}/{len(top)}] {r['url'][:80]}...", file=sys.stderr)
             page_text = fetch_page_text(r["url"])
-            enriched.append({
-                "title": r["title"],
-                "url": r["url"],
-                "description": r.get("description", ""),
-                "query": r.get("query", ""),
-                "page_excerpt": page_text[:3000],
-            })
+            enriched.append(
+                {
+                    "title": r["title"],
+                    "url": r["url"],
+                    "description": r.get("description", ""),
+                    "query": r.get("query", ""),
+                    "page_excerpt": page_text[:3000],
+                }
+            )
             time.sleep(0.2)
 
         out_file = EXTRACTED_DIR / f"{category}_enriched.json"
         out_file.write_text(json.dumps(enriched, ensure_ascii=False, indent=2))
-        print(f"  Saved {len(enriched)} enriched results -> {out_file}", file=sys.stderr)
+        print(
+            f"  Saved {len(enriched)} enriched results -> {out_file}", file=sys.stderr
+        )
 
     print("\nDone fetching!", file=sys.stderr)
 

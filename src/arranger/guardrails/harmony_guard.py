@@ -18,6 +18,9 @@ def fix_harmony(note: Note, chord_notes: list[int]) -> Note:
     candidates = [n for n in range(128) if n % 12 in chord_pitch_classes]
     fixed_note_number = min(
         candidates,
-        key=lambda candidate: (abs(candidate - note.note_number), candidate > note.note_number),
+        key=lambda candidate: (
+            abs(candidate - note.note_number),
+            candidate > note.note_number,
+        ),
     )
     return note.model_copy(update={"note_number": fixed_note_number})

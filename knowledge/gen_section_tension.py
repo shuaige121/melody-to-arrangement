@@ -13,7 +13,9 @@ try:
 except ModuleNotFoundError:
     from init_db import DB_PATH, init_db  # type: ignore
 
-SECTION_REF_PATH = Path(__file__).parent / "extracted" / "section_patterns_enriched.json"
+SECTION_REF_PATH = (
+    Path(__file__).parent / "extracted" / "section_patterns_enriched.json"
+)
 TENSION_REF_PATH = Path(__file__).parent / "extracted" / "tension_energy_enriched.json"
 
 ALLOWED_SECTION_TYPES = {
@@ -29,7 +31,19 @@ ALLOWED_SECTION_TYPES = {
     "solo",
     "interlude",
 }
-ALLOWED_STYLES = {"pop", "rock", "jazz", "rnb", "edm", "classical", "folk", "latin", "blues", "country", "general"}
+ALLOWED_STYLES = {
+    "pop",
+    "rock",
+    "jazz",
+    "rnb",
+    "edm",
+    "classical",
+    "folk",
+    "latin",
+    "blues",
+    "country",
+    "general",
+}
 ALLOWED_TEXTURE = {"thin", "medium", "thick", "very_thick"}
 REQUIRED_CURVE_NAMES = {
     "classic_pop_arc",
@@ -374,7 +388,14 @@ def build_section_patterns() -> list[dict[str, Any]]:
         sp(
             "verse",
             "country",
-            ["vocal", "acoustic_guitar", "electric_guitar", "bass", "drums", "pedal_steel"],
+            [
+                "vocal",
+                "acoustic_guitar",
+                "electric_guitar",
+                "bass",
+                "drums",
+                "pedal_steel",
+            ],
             "medium",
             5,
             "melody centers on chord tones and conversational rhythm",
@@ -480,7 +501,14 @@ def build_section_patterns() -> list[dict[str, Any]]:
         sp(
             "pre_chorus",
             "country",
-            ["vocal", "acoustic_guitar", "electric_guitar", "bass", "drums", "pedal_steel"],
+            [
+                "vocal",
+                "acoustic_guitar",
+                "electric_guitar",
+                "bass",
+                "drums",
+                "pedal_steel",
+            ],
             "medium",
             6,
             "melody climbs with longer held syllables",
@@ -526,7 +554,13 @@ def build_section_patterns() -> list[dict[str, Any]]:
         sp(
             "chorus",
             "rnb",
-            ["lead_vocal", "harmony_stack", "electric_piano", "synth_bass", "drum_machine"],
+            [
+                "lead_vocal",
+                "harmony_stack",
+                "electric_piano",
+                "synth_bass",
+                "drum_machine",
+            ],
             "thick",
             8,
             "lead melody answered by stacked ad-libs",
@@ -556,7 +590,14 @@ def build_section_patterns() -> list[dict[str, Any]]:
         sp(
             "chorus",
             "country",
-            ["lead_vocal", "backing_vocals", "acoustic_guitar", "electric_guitar", "bass", "drums"],
+            [
+                "lead_vocal",
+                "backing_vocals",
+                "acoustic_guitar",
+                "electric_guitar",
+                "bass",
+                "drums",
+            ],
             "thick",
             8,
             "hook lyric repeated with harmony thirds",
@@ -586,7 +627,14 @@ def build_section_patterns() -> list[dict[str, Any]]:
         sp(
             "chorus",
             "blues",
-            ["lead_vocal", "backing_vocals", "electric_guitar", "organ", "bass", "drums"],
+            [
+                "lead_vocal",
+                "backing_vocals",
+                "electric_guitar",
+                "organ",
+                "bass",
+                "drums",
+            ],
             "thick",
             7,
             "short repeated refrain with shouted responses",
@@ -1125,7 +1173,16 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "classic_pop_arc",
             "pop",
             "intro-verse-chorus-verse-chorus-bridge-chorus-outro",
-            {"intro": 3, "verse1": 4, "chorus1": 7, "verse2": 5, "chorus2": 8, "bridge": 6, "chorus3": 9, "outro": 4},
+            {
+                "intro": 3,
+                "verse1": 4,
+                "chorus1": 7,
+                "verse2": 5,
+                "chorus2": 8,
+                "bridge": 6,
+                "chorus3": 9,
+                "outro": 4,
+            },
             "Mainstream pop arc with repeated chorus lifts and a contrast bridge before the final peak.",
             "Katy Perry - Firework",
         ),
@@ -1133,7 +1190,18 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "rock_power_build",
             "rock",
             "intro-verse-pre_chorus-chorus-verse-pre_chorus-chorus-solo-chorus-outro",
-            {"intro": 4, "verse1": 5, "pre_chorus1": 7, "chorus1": 8, "verse2": 6, "pre_chorus2": 8, "chorus2": 9, "solo": 8, "chorus3": 10, "outro": 5},
+            {
+                "intro": 4,
+                "verse1": 5,
+                "pre_chorus1": 7,
+                "chorus1": 8,
+                "verse2": 6,
+                "pre_chorus2": 8,
+                "chorus2": 9,
+                "solo": 8,
+                "chorus3": 10,
+                "outro": 5,
+            },
             "Rock layout with aggressive step-ups into each chorus and a high-energy solo plateau.",
             "Bon Jovi - Livin' on a Prayer",
         ),
@@ -1141,7 +1209,17 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "ballad_emotional_arc",
             "pop",
             "intro-verse-verse-pre_chorus-chorus-verse-pre_chorus-chorus-outro",
-            {"intro": 2, "verse1": 3, "verse2": 4, "pre_chorus1": 5, "chorus1": 7, "verse3": 5, "pre_chorus2": 6, "chorus2": 8, "outro": 3},
+            {
+                "intro": 2,
+                "verse1": 3,
+                "verse2": 4,
+                "pre_chorus1": 5,
+                "chorus1": 7,
+                "verse3": 5,
+                "pre_chorus2": 6,
+                "chorus2": 8,
+                "outro": 3,
+            },
             "Ballad curve rises gradually from intimacy to emotional release, then resolves softly.",
             "Adele - Someone Like You",
         ),
@@ -1149,7 +1227,15 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "edm_drop_cycle",
             "edm",
             "intro-buildup-drop-breakdown-buildup-drop-outro",
-            {"intro": 3, "buildup1": 8, "drop1": 10, "breakdown": 4, "buildup2": 9, "drop2": 10, "outro": 3},
+            {
+                "intro": 3,
+                "buildup1": 8,
+                "drop1": 10,
+                "breakdown": 4,
+                "buildup2": 9,
+                "drop2": 10,
+                "outro": 3,
+            },
             "Two-cycle EDM architecture alternating high-tension builds and maximal drop release.",
             "Martin Garrix - Animals",
         ),
@@ -1157,7 +1243,15 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "jazz_head_solo_head",
             "jazz",
             "intro-head-solo1-solo2-trading-head-outro",
-            {"intro": 3, "head_in": 5, "solo1": 7, "solo2": 8, "trading": 9, "head_out": 6, "outro": 4},
+            {
+                "intro": 3,
+                "head_in": 5,
+                "solo1": 7,
+                "solo2": 8,
+                "trading": 9,
+                "head_out": 6,
+                "outro": 4,
+            },
             "Traditional jazz form where improvisational tension peaks during solos and trading.",
             "Miles Davis - So What",
         ),
@@ -1165,7 +1259,13 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "classical_sonata",
             "classical",
             "introduction-exposition-development-recapitulation-coda",
-            {"introduction": 3, "exposition": 6, "development": 9, "recapitulation": 7, "coda": 5},
+            {
+                "introduction": 3,
+                "exposition": 6,
+                "development": 9,
+                "recapitulation": 7,
+                "coda": 5,
+            },
             "Sonata-like macro curve with highest tension in development and controlled release afterward.",
             "Beethoven - Symphony No. 5 (Movement 1)",
         ),
@@ -1173,7 +1273,17 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "folk_storytelling",
             "folk",
             "intro-verse-verse-chorus-verse-chorus-bridge-chorus-outro",
-            {"intro": 2, "verse1": 3, "verse2": 4, "chorus1": 6, "verse3": 5, "chorus2": 7, "bridge": 6, "chorus3": 8, "outro": 3},
+            {
+                "intro": 2,
+                "verse1": 3,
+                "verse2": 4,
+                "chorus1": 6,
+                "verse3": 5,
+                "chorus2": 7,
+                "bridge": 6,
+                "chorus3": 8,
+                "outro": 3,
+            },
             "Narrative folk arc where each verse adds weight and choruses escalate community sing-along energy.",
             "Mumford & Sons - I Will Wait",
         ),
@@ -1181,7 +1291,18 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "rnb_groove_build",
             "rnb",
             "intro-verse-pre_chorus-chorus-verse-pre_chorus-chorus-bridge-chorus-outro",
-            {"intro": 3, "verse1": 4, "pre_chorus1": 6, "chorus1": 7, "verse2": 5, "pre_chorus2": 7, "chorus2": 8, "bridge": 6, "chorus3": 9, "outro": 4},
+            {
+                "intro": 3,
+                "verse1": 4,
+                "pre_chorus1": 6,
+                "chorus1": 7,
+                "verse2": 5,
+                "pre_chorus2": 7,
+                "chorus2": 8,
+                "bridge": 6,
+                "chorus3": 9,
+                "outro": 4,
+            },
             "R&B tension profile keeps groove continuity while layering harmonic and vocal intensity.",
             "Beyonce - Halo",
         ),
@@ -1189,7 +1310,15 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "blues_12bar_cycle",
             "blues",
             "intro-chorus1-chorus2-solo-chorus3-turnaround-outro",
-            {"intro": 3, "chorus1": 5, "chorus2": 6, "solo": 8, "chorus3": 7, "turnaround": 6, "outro": 4},
+            {
+                "intro": 3,
+                "chorus1": 5,
+                "chorus2": 6,
+                "solo": 8,
+                "chorus3": 7,
+                "turnaround": 6,
+                "outro": 4,
+            },
             "Blues cycle builds within repeated 12-bar forms, peaking in instrumental solo choruses.",
             "B.B. King - The Thrill Is Gone",
         ),
@@ -1197,7 +1326,17 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "latin_dance_energy",
             "latin",
             "intro-verse-pre_chorus-chorus-montuno-chorus-break-chorus-outro",
-            {"intro": 4, "verse": 5, "pre_chorus": 6, "chorus1": 8, "montuno": 9, "chorus2": 9, "break": 6, "chorus3": 10, "outro": 5},
+            {
+                "intro": 4,
+                "verse": 5,
+                "pre_chorus": 6,
+                "chorus1": 8,
+                "montuno": 9,
+                "chorus2": 9,
+                "break": 6,
+                "chorus3": 10,
+                "outro": 5,
+            },
             "Latin dance arc sustains high groove energy with montuno-driven late-section lift.",
             "Marc Anthony - Vivir Mi Vida",
         ),
@@ -1205,7 +1344,16 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "country_verse_chorus",
             "country",
             "intro-verse-chorus-verse-chorus-bridge-chorus-outro",
-            {"intro": 3, "verse1": 4, "chorus1": 7, "verse2": 5, "chorus2": 8, "bridge": 6, "chorus3": 9, "outro": 4},
+            {
+                "intro": 3,
+                "verse1": 4,
+                "chorus1": 7,
+                "verse2": 5,
+                "chorus2": 8,
+                "bridge": 6,
+                "chorus3": 9,
+                "outro": 4,
+            },
             "Country arc with lyrical verses and increasingly anthemic choruses.",
             "Luke Combs - Beautiful Crazy",
         ),
@@ -1213,7 +1361,16 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "anthem_epic_build",
             "rock",
             "intro-verse-pre_chorus-chorus-breakdown-buildup-chorus-outro",
-            {"intro": 3, "verse": 5, "pre_chorus": 7, "chorus1": 9, "breakdown": 4, "buildup": 8, "chorus2": 10, "outro": 6},
+            {
+                "intro": 3,
+                "verse": 5,
+                "pre_chorus": 7,
+                "chorus1": 9,
+                "breakdown": 4,
+                "buildup": 8,
+                "chorus2": 10,
+                "outro": 6,
+            },
             "Anthemic curve with dramatic mid-song reset and oversized final chorus return.",
             "Imagine Dragons - Believer",
         ),
@@ -1221,7 +1378,14 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "minimal_ambient",
             "general",
             "intro-texture_a-texture_b-climax-decay-outro",
-            {"intro": 2, "texture_a": 3, "texture_b": 4, "climax": 6, "decay": 3, "outro": 2},
+            {
+                "intro": 2,
+                "texture_a": 3,
+                "texture_b": 4,
+                "climax": 6,
+                "decay": 3,
+                "outro": 2,
+            },
             "Low-contrast ambient shape with subtle crest rather than sharp peaks.",
             "Brian Eno - An Ending (Ascent)",
         ),
@@ -1229,7 +1393,16 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "progressive_long_build",
             "edm",
             "intro-verse-buildup1-drop1-breakdown-buildup2-drop2-extended_outro",
-            {"intro": 2, "verse": 4, "buildup1": 7, "drop1": 8, "breakdown": 5, "buildup2": 9, "drop2": 10, "extended_outro": 4},
+            {
+                "intro": 2,
+                "verse": 4,
+                "buildup1": 7,
+                "drop1": 8,
+                "breakdown": 5,
+                "buildup2": 9,
+                "drop2": 10,
+                "extended_outro": 4,
+            },
             "Progressive template favors long transitions and a larger second drop payoff.",
             "Eric Prydz - Opus",
         ),
@@ -1237,7 +1410,16 @@ def build_tension_curves() -> list[dict[str, Any]]:
             "hip_hop_verse_hook",
             "hip_hop",
             "intro-verse-hook-verse-hook-bridge-hook-outro",
-            {"intro": 3, "verse1": 5, "hook1": 7, "verse2": 6, "hook2": 8, "bridge": 6, "hook3": 9, "outro": 4},
+            {
+                "intro": 3,
+                "verse1": 5,
+                "hook1": 7,
+                "verse2": 6,
+                "hook2": 8,
+                "bridge": 6,
+                "hook3": 9,
+                "outro": 4,
+            },
             "Hip-hop arrangement arc where verses carry narrative tension and hooks deliver repeated release.",
             "Drake - God's Plan",
         ),
@@ -1246,7 +1428,9 @@ def build_tension_curves() -> list[dict[str, Any]]:
 
 def validate_section_patterns(records: list[dict[str, Any]]) -> None:
     if len(records) < 50:
-        raise ValueError(f"section_patterns requires at least 50 records, got {len(records)}")
+        raise ValueError(
+            f"section_patterns requires at least 50 records, got {len(records)}"
+        )
 
     style_map: dict[str, set[str]] = {}
     for i, rec in enumerate(records):
@@ -1257,11 +1441,16 @@ def validate_section_patterns(records: list[dict[str, Any]]) -> None:
         if style not in ALLOWED_STYLES:
             raise ValueError(f"Invalid style at #{i}: {style}")
         if rec["texture_density"] not in ALLOWED_TEXTURE:
-            raise ValueError(f"Invalid texture_density at #{i}: {rec['texture_density']}")
+            raise ValueError(
+                f"Invalid texture_density at #{i}: {rec['texture_density']}"
+            )
         level = rec["energy_level"]
         if level not in {str(v) for v in range(1, 11)}:
             raise ValueError(f"energy_level must be string 1-10 at #{i}: {level}")
-        if not isinstance(rec["active_instruments"], list) or not rec["active_instruments"]:
+        if (
+            not isinstance(rec["active_instruments"], list)
+            or not rec["active_instruments"]
+        ):
             raise ValueError(f"active_instruments must be non-empty list at #{i}")
 
         style_map.setdefault(section_type, set()).add(style)
@@ -1275,7 +1464,9 @@ def validate_section_patterns(records: list[dict[str, Any]]) -> None:
 
 def validate_tension_curves(records: list[dict[str, Any]]) -> None:
     if len(records) < 15:
-        raise ValueError(f"tension_curves requires at least 15 records, got {len(records)}")
+        raise ValueError(
+            f"tension_curves requires at least 15 records, got {len(records)}"
+        )
 
     names = {rec["name"] for rec in records}
     missing_names = sorted(REQUIRED_CURVE_NAMES - names)
@@ -1284,7 +1475,9 @@ def validate_tension_curves(records: list[dict[str, Any]]) -> None:
 
     for i, rec in enumerate(records):
         if not rec["name"] or not rec["structure"]:
-            raise ValueError(f"Invalid tension curve record #{i}: missing name/structure")
+            raise ValueError(
+                f"Invalid tension curve record #{i}: missing name/structure"
+            )
         curve_data = rec["curve_data"]
         if not isinstance(curve_data, dict) or not curve_data:
             raise ValueError(f"curve_data must be non-empty object at #{i}")
@@ -1292,15 +1485,21 @@ def validate_tension_curves(records: list[dict[str, Any]]) -> None:
             if not isinstance(key, str) or not key:
                 raise ValueError(f"curve_data key must be non-empty string at #{i}")
             if not isinstance(value, int) or value < 1 or value > 10:
-                raise ValueError(f"curve_data value must be int 1-10 at #{i}: {key}={value}")
+                raise ValueError(
+                    f"curve_data value must be int 1-10 at #{i}: {key}={value}"
+                )
 
 
-def assign_sources(records: list[dict[str, Any]], refs: list[dict[str, str]], kind: str) -> None:
+def assign_sources(
+    records: list[dict[str, Any]], refs: list[dict[str, str]], kind: str
+) -> None:
     for idx, record in enumerate(records):
         record["source"] = source_for(kind, refs, idx)
 
 
-def write_section_patterns(conn: sqlite3.Connection, records: list[dict[str, Any]]) -> None:
+def write_section_patterns(
+    conn: sqlite3.Connection, records: list[dict[str, Any]]
+) -> None:
     conn.execute("DELETE FROM section_patterns")
     conn.executemany(
         """
@@ -1314,7 +1513,9 @@ def write_section_patterns(conn: sqlite3.Connection, records: list[dict[str, Any
             (
                 rec["section_type"],
                 rec["style"],
-                json.dumps(rec["active_instruments"], ensure_ascii=False, separators=(",", ":")),
+                json.dumps(
+                    rec["active_instruments"], ensure_ascii=False, separators=(",", ":")
+                ),
                 rec["texture_density"],
                 rec["energy_level"],
                 rec["melody_treatment"],
@@ -1332,7 +1533,9 @@ def write_section_patterns(conn: sqlite3.Connection, records: list[dict[str, Any
     )
 
 
-def write_tension_curves(conn: sqlite3.Connection, records: list[dict[str, Any]]) -> None:
+def write_tension_curves(
+    conn: sqlite3.Connection, records: list[dict[str, Any]]
+) -> None:
     conn.execute("DELETE FROM tension_curves")
     conn.executemany(
         """
@@ -1345,7 +1548,9 @@ def write_tension_curves(conn: sqlite3.Connection, records: list[dict[str, Any]]
                 rec["name"],
                 rec["style"],
                 rec["structure"],
-                json.dumps(rec["curve_data"], ensure_ascii=False, separators=(",", ":")),
+                json.dumps(
+                    rec["curve_data"], ensure_ascii=False, separators=(",", ":")
+                ),
                 rec["description"],
                 rec["example_song"],
                 rec["source"],

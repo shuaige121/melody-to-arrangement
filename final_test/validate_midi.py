@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import csv
 import shutil
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -88,6 +87,7 @@ def parse_midi_basic(path: Path) -> dict:
     num_tracks_raw = len(pm.instruments)
     if len(data) >= 14 and data[:4] == b"MThd":
         import struct
+
         midi_format = struct.unpack(">H", data[8:10])[0]
         num_tracks_raw = struct.unpack(">H", data[10:12])[0]
         division = struct.unpack(">H", data[12:14])[0]
@@ -117,13 +117,13 @@ def resolve_midi_path(level: str) -> tuple[Path, Path | None]:
 
 def validate_level(level: str) -> MidiValidationResult:
     output_path, copied_from = resolve_midi_path(level)
-    result = MidiValidationResult(level=level, path=output_path, copied_from=copied_from)
+    result = MidiValidationResult(
+        level=level, path=output_path, copied_from=copied_from
+    )
 
     result.exists = output_path.exists()
     if not result.exists:
-        result.error = (
-            f"missing final_test/output_{level}.mid and final_test/{level}/logic_arrangement.mid"
-        )
+        result.error = f"missing final_test/output_{level}.mid and final_test/{level}/logic_arrangement.mid"
         return result
 
     result.file_size = output_path.stat().st_size

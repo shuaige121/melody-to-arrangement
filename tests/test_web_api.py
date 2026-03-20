@@ -1,7 +1,8 @@
 from io import BytesIO
 
+import httpx
 import mido
-from fastapi.testclient import TestClient
+import pytest
 
 from arranger.web.app import app
 
@@ -24,13 +25,16 @@ def _build_input_midi_bytes() -> bytes:
     return buffer.getvalue()
 
 
-def test_upload_midi_api_returns_melody_notes_and_metadata():
-    client = TestClient(app)
-
-    response = client.post(
-        "/api/upload/midi",
-        files={"file": ("melody.mid", _build_input_midi_bytes(), "audio/midi")},
-    )
+@pytest.mark.anyio
+async def test_upload_midi_api_returns_melody_notes_and_metadata():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as client:
+        response = await client.post(
+            "/api/upload/midi",
+            files={"file": ("melody.mid", _build_input_midi_bytes(), "audio/midi")},
+        )
 
     assert response.status_code == 200
     payload = response.json()
@@ -41,14 +45,17 @@ def test_upload_midi_api_returns_melody_notes_and_metadata():
     assert len(payload["notes"]) == 2
 
 
-def test_arrange_api_returns_midi_file():
-    client = TestClient(app)
-
-    response = client.post(
-        "/api/arrange",
-        data={"style": "pop", "mood": "neutral"},
-        files={"file": ("melody.mid", _build_input_midi_bytes(), "audio/midi")},
-    )
+@pytest.mark.anyio
+async def test_arrange_api_returns_midi_file():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as client:
+        response = await client.post(
+            "/api/arrange",
+            data={"style": "pop", "mood": "neutral"},
+            files={"file": ("melody.mid", _build_input_midi_bytes(), "audio/midi")},
+        )
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "audio/midi"
@@ -64,14 +71,17 @@ def test_arrange_api_returns_midi_file():
     assert {"Lead Melody", "Drums", "Bass", "Piano"}.issubset(track_names)
 
 
-def test_upload_audio_api_returns_not_implemented():
-    client = TestClient(app)
-
-    response = client.post(
-        "/api/upload/audio",
-        data={"source_type": "vocal"},
-        files={"file": ("melody.wav", b"not-a-real-wave", "audio/wav")},
-    )
+@pytest.mark.anyio
+async def test_upload_audio_api_returns_not_implemented():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as client:
+        response = await client.post(
+            "/api/upload/audio",
+            data={"source_type": "vocal"},
+            files={"file": ("melody.wav", b"not-a-real-wave", "audio/wav")},
+        )
 
     assert response.status_code == 501
     assert "not available in this build" in response.json()["detail"]

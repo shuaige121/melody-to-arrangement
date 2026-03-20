@@ -14,7 +14,13 @@ AVAILABLE_STRATEGIES = {
         "jazz": ["ii-V-I-I", "I-vi-ii-V", "iii-vi-ii-V"],
     },
     "drum_styles": list(DRUM_PATTERNS.keys()),  # from patterns.drums
-    "bass_styles": ["root_note", "root_octave", "walking", "arpeggio", "syncopated", "pedal"],
+    "bass_styles": [
+        "root_note",
+        "root_octave",
+        "walking",
+        "arpeggio",
+        "syncopated",
+        "pedal",
+    ],
     "piano_styles": ["block_chord", "arpeggiated", "rhythmic_stab", "ballad_spread"],
 }
-

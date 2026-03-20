@@ -6,7 +6,9 @@ from .note import Note
 class Pattern(BaseModel):
     """Reusable musical pattern (chord progression, drum loop, bass line, etc.)."""
 
-    pattern_type: str  # "chord_progression" | "drum_pattern" | "bass_line" | "piano_comp"
+    pattern_type: (
+        str  # "chord_progression" | "drum_pattern" | "bass_line" | "piano_comp"
+    )
     notes: list[Note]
     bars: int = Field(gt=0, description="Length in bars")
     time_sig: tuple[int, int] = (4, 4)

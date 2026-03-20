@@ -16,7 +16,13 @@ def test_analyze_melody_detects_c_major_key(c_major_melody):
 
 def test_analyze_melody_density_classification_dense():
     notes = [
-        Note(note_number=60 + (i % 5), velocity=80, start_tick=i * 120, duration_tick=120, channel=0)
+        Note(
+            note_number=60 + (i % 5),
+            velocity=80,
+            start_tick=i * 120,
+            duration_tick=120,
+            channel=0,
+        )
         for i in range(16)
     ]
     result = analyze_melody(notes)

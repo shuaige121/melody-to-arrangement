@@ -21,8 +21,12 @@ VoiceLeadingMode = Literal["strict", "relaxed", "free"]
 
 DEFAULT_CHORD_OPTIONS = ("I-V-vi-IV", "I-vi-IV-V", "vi-IV-I-V")
 _CHOICE_LETTERS = tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-_ROMAN_TOKEN_PATTERN = re.compile(r"^(?:b|#)?[ivIV]+(?:°|dim|aug|sus2|sus4|add9|6|7|9|11|13|maj7|m7)?$")
-_CHORD_NAME_PATTERN = re.compile(r"^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus2|sus4|add9|6|7|9|11|13|maj7|m7)?$")
+_ROMAN_TOKEN_PATTERN = re.compile(
+    r"^(?:b|#)?[ivIV]+(?:°|dim|aug|sus2|sus4|add9|6|7|9|11|13|maj7|m7)?$"
+)
+_CHORD_NAME_PATTERN = re.compile(
+    r"^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus2|sus4|add9|6|7|9|11|13|maj7|m7)?$"
+)
 
 
 class CreativityLevel(Enum):
@@ -117,9 +121,13 @@ def get_config(level: str | CreativityLevel) -> CreativityConfig:
             resolved = CreativityLevel(normalized)
         except ValueError as exc:
             allowed = ", ".join(item.value for item in CreativityLevel)
-            raise ValueError(f"Unknown creativity level: {level!r}. Expected one of: {allowed}.") from exc
+            raise ValueError(
+                f"Unknown creativity level: {level!r}. Expected one of: {allowed}."
+            ) from exc
     else:
-        raise TypeError(f"level must be str or CreativityLevel, got {type(level).__name__}")
+        raise TypeError(
+            f"level must be str or CreativityLevel, got {type(level).__name__}"
+        )
 
     return CREATIVITY_CONFIGS[resolved]
 
@@ -134,7 +142,8 @@ def build_llm_prompt(config: CreativityConfig, context: dict) -> str:
 
     if config.level is CreativityLevel.CONSERVATIVE:
         formatted = " ".join(
-            f"[{_CHOICE_LETTERS[idx]}] {option}" for idx, option in enumerate(options[: len(_CHOICE_LETTERS)])
+            f"[{_CHOICE_LETTERS[idx]}] {option}"
+            for idx, option in enumerate(options[: len(_CHOICE_LETTERS)])
         )
         return f"Choose the best option from the following list: {formatted}. Answer with just the letter."
 
@@ -156,7 +165,9 @@ def build_llm_prompt(config: CreativityConfig, context: dict) -> str:
     )
 
 
-def filter_llm_output(config: CreativityConfig, output: dict, constraints: dict) -> dict:
+def filter_llm_output(
+    config: CreativityConfig, output: dict, constraints: dict
+) -> dict:
     """Validate and filter LLM output against creativity-level constraints."""
 
     filtered = dict(output)
@@ -200,21 +211,31 @@ def _enforce_hard_constraints(
         actual = filtered.get(field)
         if actual is None:
             filtered[field] = expected
-            violations.append(f"Missing required field '{field}'. Restored to {expected!r}.")
+            violations.append(
+                f"Missing required field '{field}'. Restored to {expected!r}."
+            )
             continue
         if actual != expected:
             filtered[field] = expected
-            violations.append(f"Field '{field}' changed ({actual!r} -> {expected!r}); reverted.")
+            violations.append(
+                f"Field '{field}' changed ({actual!r} -> {expected!r}); reverted."
+            )
 
 
-def _validate_conservative_choice(filtered: dict, constraints: dict, violations: list[str]) -> None:
+def _validate_conservative_choice(
+    filtered: dict, constraints: dict, violations: list[str]
+) -> None:
     allowed_raw = constraints.get("allowed_options", DEFAULT_CHORD_OPTIONS)
     allowed = [str(item).strip() for item in allowed_raw if str(item).strip()]
     if not allowed:
         allowed = list(DEFAULT_CHORD_OPTIONS)
 
-    allowed_by_letter = {letter: option for letter, option in zip(_CHOICE_LETTERS, allowed)}
-    selected_value = filtered.get("choice") or filtered.get("answer") or filtered.get("selection")
+    allowed_by_letter = {
+        letter: option for letter, option in zip(_CHOICE_LETTERS, allowed)
+    }
+    selected_value = (
+        filtered.get("choice") or filtered.get("answer") or filtered.get("selection")
+    )
 
     if selected_value is None and "chord_progression" in filtered:
         selected_value = filtered["chord_progression"]
@@ -222,7 +243,9 @@ def _validate_conservative_choice(filtered: dict, constraints: dict, violations:
     if selected_value is None:
         default_letter = next(iter(allowed_by_letter), "A")
         filtered["choice"] = default_letter
-        filtered["chord_progression"] = allowed_by_letter.get(default_letter, allowed[0])
+        filtered["chord_progression"] = allowed_by_letter.get(
+            default_letter, allowed[0]
+        )
         violations.append("No choice found; defaulted to first allowed option.")
         return
 
@@ -241,7 +264,9 @@ def _validate_conservative_choice(filtered: dict, constraints: dict, violations:
     default_letter = next(iter(allowed_by_letter), "A")
     filtered["choice"] = default_letter
     filtered["chord_progression"] = allowed_by_letter.get(default_letter, allowed[0])
-    violations.append(f"Choice {selected_text!r} is not in allowed options {list(allowed_by_letter)}.")
+    violations.append(
+        f"Choice {selected_text!r} is not in allowed options {list(allowed_by_letter)}."
+    )
 
 
 def _validate_balanced_theory(filtered: dict, violations: list[str]) -> None:
@@ -255,11 +280,15 @@ def _validate_balanced_theory(filtered: dict, violations: list[str]) -> None:
     roman_like = all(_ROMAN_TOKEN_PATTERN.match(token) for token in tokens)
     chord_like = all(_CHORD_NAME_PATTERN.match(token) for token in tokens)
     if not (roman_like or chord_like):
-        violations.append("Progression contains unsupported chord token format for balanced mode.")
+        violations.append(
+            "Progression contains unsupported chord token format for balanced mode."
+        )
         return
 
     if roman_like and not any(token.lower().startswith("i") for token in tokens):
-        violations.append("Balanced mode progression should include tonic function (I/i).")
+        violations.append(
+            "Balanced mode progression should include tonic function (I/i)."
+        )
 
 
 def _extract_progression_tokens(payload: dict) -> list[str]:

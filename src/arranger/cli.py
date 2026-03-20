@@ -27,7 +27,9 @@ def main():
     "--style",
     "-s",
     default="pop",
-    type=click.Choice(["pop", "rock", "ballad", "jazz", "edm", "rnb", "latin", "funk", "country"]),
+    type=click.Choice(
+        ["pop", "rock", "ballad", "jazz", "edm", "rnb", "latin", "funk", "country"]
+    ),
     help="Music style",
 )
 @click.option(
@@ -37,7 +39,13 @@ def main():
     type=click.Choice(["happy", "sad", "energetic", "chill", "epic", "neutral"]),
     help="Target mood",
 )
-@click.option("--out", "-o", "output_path", default=None, help="Output MIDI file (default: input_arranged.mid)")
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    default=None,
+    help="Output MIDI file (default: input_arranged.mid)",
+)
 def arrange(input_path, style, mood, output_path):
     """Arrange a melody MIDI into a full multi-track arrangement."""
     if output_path is None:
@@ -60,7 +68,14 @@ def arrange(input_path, style, mood, output_path):
 
 
 @main.command()
-@click.option("--input", "-i", "input_path", required=True, type=click.Path(exists=True), help="MIDI file to analyze")
+@click.option(
+    "--input",
+    "-i",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="MIDI file to analyze",
+)
 def analyze(input_path):
     """Analyze a MIDI file and show its musical structure."""
     from arranger.midi.parser import parse_midi

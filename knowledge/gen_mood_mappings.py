@@ -17,7 +17,9 @@ except ModuleNotFoundError:
     from init_db import DB_PATH, init_db  # type: ignore
 
 DB_FILE = Path(DB_PATH)
-REFERENCE_FILE = Path(__file__).resolve().parent / "extracted" / "mood_music_enriched.json"
+REFERENCE_FILE = (
+    Path(__file__).resolve().parent / "extracted" / "mood_music_enriched.json"
+)
 SOURCE_TAG = "generated:knowledge/gen_mood_mappings.py"
 
 MOOD_COLUMNS = [
@@ -688,7 +690,13 @@ def pick_reference(
 ) -> dict[str, str]:
     candidates = refs_by_query.get(query) or all_refs
     if not candidates:
-        return {"title": "", "url": "", "description": "", "query": "", "page_excerpt": ""}
+        return {
+            "title": "",
+            "url": "",
+            "description": "",
+            "query": "",
+            "page_excerpt": "",
+        }
     return max(candidates, key=lambda ref: score_reference(ref, terms))
 
 
@@ -700,10 +708,14 @@ def build_seed_rows(references: list[dict[str, str]]) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for base in BASE_MAPPINGS:
         query = str(base.get("reference_query", ""))
-        terms = [str(base.get("mood", ""))] + [str(x) for x in base.get("reference_terms", [])]
+        terms = [str(base.get("mood", ""))] + [
+            str(x) for x in base.get("reference_terms", [])
+        ]
         ref = pick_reference(refs_by_query, references, query, terms)
 
-        snippet = clean_text(ref.get("description", "") or ref.get("title", ""), limit=220)
+        snippet = clean_text(
+            ref.get("description", "") or ref.get("title", ""), limit=220
+        )
         desc_with_ref = (
             f"{base['description']} Search reference: {snippet}"
             if snippet

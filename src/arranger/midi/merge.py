@@ -91,7 +91,9 @@ def _max_end_tick(notes: list[Note]) -> int:
     return end_tick
 
 
-def merge_tracks(track_notes: dict[str, list[Note]], arrangement_meta: dict) -> Arrangement:
+def merge_tracks(
+    track_notes: dict[str, list[Note]], arrangement_meta: dict
+) -> Arrangement:
     """
     将轨道 note 映射合并为 Arrangement。
     """
@@ -120,12 +122,20 @@ def merge_tracks(track_notes: dict[str, list[Note]], arrangement_meta: dict) -> 
             ),
         )
         all_notes.extend(sorted_notes)
-        tracks.append(Track(name=safe_name, channel=channel, program=program, notes=sorted_notes))
+        tracks.append(
+            Track(name=safe_name, channel=channel, program=program, notes=sorted_notes)
+        )
 
-    ticks_per_bar = int(ppq * (time_sig[0] * (4 / time_sig[1]))) if time_sig[1] > 0 else ppq * 4
+    ticks_per_bar = (
+        int(ppq * (time_sig[0] * (4 / time_sig[1]))) if time_sig[1] > 0 else ppq * 4
+    )
     max_end_tick = _max_end_tick(all_notes)
-    inferred_bars = max(1, math.ceil(max_end_tick / ticks_per_bar)) if ticks_per_bar > 0 else 1
-    total_bars = max(1, _as_int(arrangement_meta.get("total_bars", inferred_bars), inferred_bars))
+    inferred_bars = (
+        max(1, math.ceil(max_end_tick / ticks_per_bar)) if ticks_per_bar > 0 else 1
+    )
+    total_bars = max(
+        1, _as_int(arrangement_meta.get("total_bars", inferred_bars), inferred_bars)
+    )
 
     return Arrangement(
         tracks=tracks,

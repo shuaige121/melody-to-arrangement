@@ -22,7 +22,9 @@ def _as_int(value: object, default: int) -> int:
         return default
 
 
-def _build_note(note_number: int, velocity: int, start_tick: int, duration_tick: int, channel: int) -> Note:
+def _build_note(
+    note_number: int, velocity: int, start_tick: int, duration_tick: int, channel: int
+) -> Note:
     return Note(
         note_number=note_number,
         velocity=max(1, velocity),
@@ -32,7 +34,9 @@ def _build_note(note_number: int, velocity: int, start_tick: int, duration_tick:
     )
 
 
-def _parse_track(track: mido.MidiTrack) -> tuple[list[Note], int | None, tuple[int, int] | None]:
+def _parse_track(
+    track: mido.MidiTrack,
+) -> tuple[list[Note], int | None, tuple[int, int] | None]:
     notes: list[Note] = []
     absolute_tick = 0
     active_notes: dict[tuple[int, int], deque[tuple[int, int]]] = defaultdict(deque)
@@ -47,8 +51,12 @@ def _parse_track(track: mido.MidiTrack) -> tuple[list[Note], int | None, tuple[i
             continue
 
         if msg.type == "time_signature" and track_time_sig is None:
-            numerator = _as_int(getattr(msg, "numerator", DEFAULT_TIME_SIG[0]), DEFAULT_TIME_SIG[0])
-            denominator = _as_int(getattr(msg, "denominator", DEFAULT_TIME_SIG[1]), DEFAULT_TIME_SIG[1])
+            numerator = _as_int(
+                getattr(msg, "numerator", DEFAULT_TIME_SIG[0]), DEFAULT_TIME_SIG[0]
+            )
+            denominator = _as_int(
+                getattr(msg, "denominator", DEFAULT_TIME_SIG[1]), DEFAULT_TIME_SIG[1]
+            )
             track_time_sig = (max(1, numerator), max(1, denominator))
             continue
 
@@ -159,11 +167,15 @@ def extract_melody_track(filepath: str) -> list[Note]:
         if track_notes and not fallback_notes:
             fallback_notes = track_notes
 
-        melodic_notes = [n for n in track_notes if _as_int(getattr(n, "channel", 0), 0) != 9]
+        melodic_notes = [
+            n for n in track_notes if _as_int(getattr(n, "channel", 0), 0) != 9
+        ]
         if not melodic_notes:
             continue
 
-        avg_pitch = sum(_as_int(getattr(n, "note_number", 60), 60) for n in melodic_notes) / len(melodic_notes)
+        avg_pitch = sum(
+            _as_int(getattr(n, "note_number", 60), 60) for n in melodic_notes
+        ) / len(melodic_notes)
         if best_avg_pitch is None or avg_pitch > best_avg_pitch:
             best_avg_pitch = avg_pitch
             best_notes = melodic_notes

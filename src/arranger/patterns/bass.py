@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from arranger.models.note import Note
-from arranger.patterns.timing import beat_ticks, normalize_time_sig, primary_beat_indices, bar_ticks
+from arranger.patterns.timing import (
+    beat_ticks,
+    normalize_time_sig,
+    primary_beat_indices,
+    bar_ticks,
+)
 
 BASS_STYLES: dict[str, str] = {
     "root_note": "Play root on beat 1 of each chord",
@@ -18,7 +23,11 @@ _BASS_LOW = 28
 _BASS_HIGH = 55
 
 
-def _fit_to_range(note_number: int, low: int = _BASS_LOW, high: int = _BASS_HIGH) -> int:
+def _fit_to_range(
+    note_number: int, low: int = _BASS_LOW, high: int = _BASS_HIGH
+) -> int:
+    if high - low < 12:
+        return max(0, min(127, max(low, min(high, note_number))))
     while note_number < low:
         note_number += 12
     while note_number > high:
@@ -26,7 +35,13 @@ def _fit_to_range(note_number: int, low: int = _BASS_LOW, high: int = _BASS_HIGH
     return max(0, min(127, note_number))
 
 
-def _add_note(notes: list[Note], note_number: int, velocity: int, start_tick: int, duration_tick: int) -> None:
+def _add_note(
+    notes: list[Note],
+    note_number: int,
+    velocity: int,
+    start_tick: int,
+    duration_tick: int,
+) -> None:
     notes.append(
         Note(
             note_number=max(0, min(127, note_number)),
@@ -75,8 +90,12 @@ def generate_bass_line(
         if style == "root_octave":
             _add_note(notes, root, 92, bar_start, beat_tick)
             octave_note = _fit_to_range(root + 12)
-            accent_beat = strong_beats[1] if len(strong_beats) > 1 else max(0, beats_per_bar - 1)
-            _add_note(notes, octave_note, 88, bar_start + accent_beat * beat_tick, beat_tick)
+            accent_beat = (
+                strong_beats[1] if len(strong_beats) > 1 else max(0, beats_per_bar - 1)
+            )
+            _add_note(
+                notes, octave_note, 88, bar_start + accent_beat * beat_tick, beat_tick
+            )
             continue
 
         if style == "walking":
@@ -86,13 +105,17 @@ def generate_bass_line(
             walking_notes = [root, mid1, mid2, next_root]
             for beat in range(beats_per_bar):
                 note_number = walking_notes[beat % len(walking_notes)]
-                _add_note(notes, note_number, 86, bar_start + beat * beat_tick, beat_tick)
+                _add_note(
+                    notes, note_number, 86, bar_start + beat * beat_tick, beat_tick
+                )
             continue
 
         if style == "arpeggio":
             arp = [chord_tones[i % len(chord_tones)] for i in range(beats_per_bar)]
             for beat, note_number in enumerate(arp):
-                _add_note(notes, note_number, 84, bar_start + beat * beat_tick, beat_tick)
+                _add_note(
+                    notes, note_number, 84, bar_start + beat * beat_tick, beat_tick
+                )
             continue
 
         if style == "syncopated":

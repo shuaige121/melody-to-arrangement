@@ -1,7 +1,11 @@
 from arranger.models.note import Note
 from arranger.patterns.bass import generate_bass_line
 from arranger.patterns.chords import COMMON_PROGRESSIONS, resolve_progression
-from arranger.patterns.drums import DRUM_PATTERNS, drum_pattern_to_notes, get_drum_pattern
+from arranger.patterns.drums import (
+    DRUM_PATTERNS,
+    drum_pattern_to_notes,
+    get_drum_pattern,
+)
 from arranger.patterns.piano import generate_piano_comp
 
 

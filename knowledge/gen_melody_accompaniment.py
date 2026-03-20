@@ -7,7 +7,6 @@ import json
 import re
 import sqlite3
 from pathlib import Path
-from typing import Any
 
 try:
     from knowledge.init_db import DB_PATH, init_db
@@ -16,7 +15,9 @@ except ModuleNotFoundError:
 
 
 SOURCE_PREFIX = "gen_melody_accompaniment"
-ENRICHED_JSON_PATH = Path(__file__).parent / "extracted" / "melody_accompaniment_enriched.json"
+ENRICHED_JSON_PATH = (
+    Path(__file__).parent / "extracted" / "melody_accompaniment_enriched.json"
+)
 DB_FILE = Path(DB_PATH)
 
 ALLOWED_RELATIONSHIPS = {
@@ -1017,7 +1018,9 @@ def pick_reference_url(pattern: dict[str, str], refs: list[dict[str, str]]) -> s
     best_score = -1
     best_url = ""
     for ref in refs:
-        corpus = normalize(" ".join([ref["title"], ref["description"], ref["page_excerpt"]]))
+        corpus = normalize(
+            " ".join([ref["title"], ref["description"], ref["page_excerpt"]])
+        )
         score = 0
         for token in tokens:
             if token in corpus:
@@ -1055,7 +1058,8 @@ def validate_patterns(rows: list[dict[str, str]]) -> None:
 def ensure_coverage(rows: list[dict[str, str]]) -> None:
     def has_pair(melody: str, accomp_contains: str) -> bool:
         return any(
-            row["melody_instrument"] == melody and accomp_contains in row["accomp_instrument"]
+            row["melody_instrument"] == melody
+            and accomp_contains in row["accomp_instrument"]
             for row in rows
         )
 
@@ -1072,27 +1076,54 @@ def ensure_coverage(rows: list[dict[str, str]]) -> None:
         (has_pair("vocal", "synth_pad"), "Missing Vocal + Synth Pad coverage"),
         (has_pair("vocal", "bass"), "Missing Melody + Bass coverage"),
         (has_pair("vocal", "drum"), "Missing Melody + Drums coverage"),
-        (has_pair("electric_guitar_lead", "electric_guitar_rhythm"), "Missing Lead + Rhythm Guitar coverage"),
+        (
+            has_pair("electric_guitar_lead", "electric_guitar_rhythm"),
+            "Missing Lead + Rhythm Guitar coverage",
+        ),
         (has_pair("piano", "strings"), "Missing Piano + Strings coverage"),
-        (has_name_contains("jazz_horn_with_piano_comping"), "Missing jazz horn + piano comping coverage"),
-        (has_name_contains("edm_lead_synth_with_arp"), "Missing EDM lead synth + arp coverage"),
+        (
+            has_name_contains("jazz_horn_with_piano_comping"),
+            "Missing jazz horn + piano comping coverage",
+        ),
+        (
+            has_name_contains("edm_lead_synth_with_arp"),
+            "Missing EDM lead synth + arp coverage",
+        ),
         (has_name_contains("arpeggio", "verse"), "Missing verse arpeggio pattern"),
         (has_name_contains("arpeggio", "chorus"), "Missing chorus arpeggio pattern"),
-        (has_name_contains("block_chords", "verse"), "Missing verse block chord pattern"),
-        (has_name_contains("block_chords", "chorus"), "Missing chorus block chord pattern"),
-        (has_name_contains("broken_chords", "verse"), "Missing verse broken chord pattern"),
-        (has_name_contains("broken_chords", "chorus"), "Missing chorus broken chord pattern"),
+        (
+            has_name_contains("block_chords", "verse"),
+            "Missing verse block chord pattern",
+        ),
+        (
+            has_name_contains("block_chords", "chorus"),
+            "Missing chorus block chord pattern",
+        ),
+        (
+            has_name_contains("broken_chords", "verse"),
+            "Missing verse broken chord pattern",
+        ),
+        (
+            has_name_contains("broken_chords", "chorus"),
+            "Missing chorus broken chord pattern",
+        ),
     ]
     for passed, message in checks:
         if not passed:
             raise ValueError(message)
 
 
-def build_rows(patterns: list[dict[str, str]], refs: list[dict[str, str]]) -> list[dict[str, str]]:
+def build_rows(
+    patterns: list[dict[str, str]], refs: list[dict[str, str]]
+) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for pattern in patterns:
         source_url = pick_reference_url(pattern, refs)
-        source = f"{SOURCE_PREFIX}:enriched|{source_url}" if source_url else f"{SOURCE_PREFIX}:manual"
+        source = (
+            f"{SOURCE_PREFIX}:enriched|{source_url}"
+            if source_url
+            else f"{SOURCE_PREFIX}:manual"
+        )
         rows.append({**pattern, "source": source})
     return rows
 
@@ -1102,7 +1133,9 @@ def insert_rows(rows: list[dict[str, str]]) -> tuple[int, int]:
     conn = sqlite3.connect(str(DB_FILE))
     c = conn.cursor()
 
-    c.execute("DELETE FROM melody_accompaniment WHERE source LIKE ?", (f"{SOURCE_PREFIX}:%",))
+    c.execute(
+        "DELETE FROM melody_accompaniment WHERE source LIKE ?", (f"{SOURCE_PREFIX}:%",)
+    )
     c.executemany(
         """
         INSERT INTO melody_accompaniment (
